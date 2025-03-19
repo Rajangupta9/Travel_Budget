@@ -1,13 +1,20 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link href="./dist/output.css" rel="stylesheet">
+</head>
+<body class="flex items-center justify-center h-screen bg-gray-100">
+    <div class="text-center bg-white p-8 rounded-lg shadow-lg w-96">
+        <h1 className="text-3xl font-bold mb-4">Welcome to Our Website</h1>
+        <h1 class="text-3xl font-bold text-red-500">Tailwind is Working!</h1>
+        <p class="text-gray-600 mb-6">Please log in or sign up to continue.</p>
+        <div class="space-y-4">
+            <a href="./src/login.html" class="block bg-blue-500 text-white p-2 rounded">Login</a>
+            <a href="./src/signup.html" class="block bg-green-500 text-white p-2 rounded">Sign Up</a>
+        </div>
+    </div>
+</body>
 </html>
