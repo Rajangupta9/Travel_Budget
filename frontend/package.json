@@ -5,12 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tailwindcss -i ./src/style.css -o ./dist/output.css && vite build",
+    "build": "npx tailwindcss -i ./src/style.css -o ./dist/output.css && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
-    "tailwindcss": "^3.2.4"
+    "tailwindcss": "^3.2.4",
+    "vite": "^6.2.2"
   }
 }
