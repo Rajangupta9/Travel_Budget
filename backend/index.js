@@ -1,11 +1,13 @@
 const express = require('express');
 const connectdb = require('./Config/db')
+const userRouter = require('./Routes/userRoutes')
 
 require("dotenv").config();
 const app = express();
 
 app.use(express.json());
 connectdb();
+app.use("/user", userRouter);
 app.get("/", (req,res)=>{
     res.send("api is working");
 });
