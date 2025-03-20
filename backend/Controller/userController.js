@@ -105,7 +105,7 @@ const refreshToken = async(req,res)=>{
 
       if(!refreshToken) return res.status(403).json({msg: "Invalid refresh token"});
 
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY, (err,user)=>{
+      jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY, (err,user)=>{
         if(err) return res.status(403).json({msg: "Invalid refresh token"});
 
         const newAcessToken = jwt.sign({id: user._id}, process.env.ACCESS_TOKEN_KEY, {expiresIn:"1hr"});
