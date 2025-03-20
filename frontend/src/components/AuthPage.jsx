@@ -3,9 +3,11 @@ import { LoginUser, SignupUser } from '../controllers/authController';
 import { useNavigate } from 'react-router-dom';
 import ForgotPassword from './ForgotPassword';
 
+
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -42,8 +44,11 @@ const AuthPage = () => {
         
         console.log('Login successful:', response);
         // Replace alert with better UI feedback
+        setIsAuthenticated(true);
+        setFormData({ email: '', password: '', confirmPassword: '', name: '' });
         setError('');
-        navigate('/dashboard'); // Redirect to dashboard after login
+        // Redirect to dashboard after login
+        navigate('/dashboard');
       } catch (err) {
         console.error("Login error:", err);
         const errorMessage = err.msg || "Login failed. Please try again.";
@@ -93,6 +98,10 @@ const AuthPage = () => {
   const handleBackFromForgotPassword = () => {
     setShowForgotPassword(false);
   };
+
+  if (isAuthenticated) {
+    return <TravelBudgetDashboard/>;
+  }
   
   // If showForgotPassword is true, render the ForgotPassword component
   if (showForgotPassword) {
