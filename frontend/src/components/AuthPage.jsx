@@ -1,14 +1,21 @@
 import React, { useState } from 'react';
-// import { loginUser } from '../controllers/authController';
+import { LoginUser, SignupUser } from '../controllers/authController';
+import { useNavigate } from 'react-router-dom';
+import ForgotPassword from './ForgotPassword';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
     name: '',
   });
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -18,20 +25,133 @@ const AuthPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
+    
+    setLoading(true);
+    setError('');
+
     if (isLogin) {
       console.log('Login submitted:', { email: formData.email, password: formData.password });
+
+      try {
+        const response = await LoginUser({
+          email: formData.email,
+          password: formData.password,
+        });
+        alert(response.msg || "Login successful");
+        console.log('Log in successful:', response);
+        navigate('/dashboard'); // Redirect to dashboard after login
+      } catch (err) {
+        console.log(err.msg);
+        const errorMessage = err.msg || "Login failed. Please try again.";
+         setError(errorMessage);
+         console.error("Login error:", errorMessage);
+         alert(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+
     } else {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        setLoading(false);
+        return;
+      }
+
       console.log('Signup submitted:', formData);
+      
+      try {
+        const response = await SignupUser({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        });
+        console.log('Signup successful:', response);
+        setIsLogin(true);
+        setFormData({...formData, name: '', confirmPassword: ''});
+        setError('');
+        alert(`Signup successful: ${JSON.stringify(response)}`);
+          // Redirect to login after signup
+
+      } catch (err) {
+        setError(err.message || 'Signup failed. Please try again.');
+        console.error('Signup error:', err);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
+    setError('');
+    setFormData({ email: '', password: '', confirmPassword: '', name: '' });
   };
+  
+  // Handle returning from the forgot password flow
+  const handleBackFromForgotPassword = () => {
+    setShowForgotPassword(false);
+  };
+  
+  // If showForgotPassword is true, render the ForgotPassword component
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
+        {/* Background with traveling cartoon elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Sky background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-300 to-cyan-100"></div>
+          
+          {/* Sun */}
+          <div className="absolute top-8 right-16 w-24 h-24 rounded-full bg-yellow-300 animate-pulse"></div>
+          
+          {/* Clouds */}
+          <div className="absolute top-12 left-1/4 w-32 h-12 bg-white rounded-full animate-bounce" style={{ animationDuration: '8s' }}></div>
+          <div className="absolute top-24 left-1/2 w-48 h-16 bg-white rounded-full animate-bounce" style={{ animationDuration: '10s' }}></div>
+          <div className="absolute top-16 right-1/4 w-40 h-14 bg-white rounded-full animate-bounce" style={{ animationDuration: '9s' }}></div>
+          
+          {/* Mountains in the background */}
+          <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-green-800 to-green-600" style={{ clipPath: 'polygon(0% 100%, 10% 80%, 20% 90%, 30% 70%, 40% 85%, 50% 60%, 60% 75%, 70% 65%, 80% 80%, 90% 70%, 100% 100%)' }}></div>
+          
+          {/* Custom animations */}
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              @keyframes moveAirplane {
+                0% { transform: translateX(-100px); }
+                100% { transform: translateX(calc(100vw + 100px)); }
+              }
+              
+              @keyframes moveCar {
+                0% { transform: translateX(-100px); }
+                100% { transform: translateX(calc(100vw + 100px)); }
+              }
+              
+              @keyframes float {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-20px); }
+              }
+              
+              .animate-moving-airplane {
+                animation: moveAirplane 20s linear infinite;
+              }
+              
+              .animate-moving-car {
+                animation: moveCar 15s linear infinite;
+              }
+              
+              .animate-float {
+                animation: float 6s ease-in-out infinite;
+              }
+            `
+          }} />
+        </div>
 
+        <ForgotPassword onBack={handleBackFromForgotPassword} />
+      </div>
+    );
+  }
+  
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
       {/* Import Google Fonts */}
@@ -253,32 +373,47 @@ const AuthPage = () => {
 
               {isLogin && (
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline transition-all">
-                    Forgot password?
-                  </a>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="font-medium text-indigo-600 hover:text-indigo-500 hover:underline transition-all"
+                >
+                  Forgot password?
+                </button>
+              </div>
               )}
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg transform transition-all duration-150 hover:scale-105"
-              >
-                <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                  {isLogin ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                      <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </span>
-                {isLogin ? 'Continue Your Journey' : 'Start Your Adventure'}
-              </button>
+            <button
+    type="submit"
+    disabled={loading}
+    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg transform transition-all duration-150 hover:scale-105"
+  >
+    <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+      {isLogin ? (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+        </svg>
+      ) : (
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+        </svg>
+      )}
+    </span>
+    {loading ? (
+      <>
+        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Processing...
+      </>
+    ) : (
+      isLogin ? 'Continue Your Journey' : 'Start Your Adventure'
+    )}
+  </button>
             </div>
           </form>
 

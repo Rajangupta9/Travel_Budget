@@ -1,6 +1,7 @@
 const User = require('../Model/userModel');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 // const login = async(req, res)=>{
 //     let {email, password} = req.body;
@@ -38,15 +39,15 @@ const jwt = require("jsonwebtoken");
 
 // module.exports = {login, signup};
 
-const genereateToken = (user)=>{
+const generateToken = (user)=>{
     const accessToken = jwt.sign(
         {id:user._id},
-        process.env.ACCESS_TOKEN_KEY,
+        process.env.ACCESS_SECRET_KEY,
         {expiresIn: "1h"}
     )
     const refreshToken = jwt.sign(
         {id:user._id},
-        process.env.REFRESH_TOKEN_KEY,
+        process.env.REFRESH_SECRET_KEY,
         {expiresIn: "7d"}
     )
 
@@ -63,8 +64,9 @@ const signup = async(req, res)=>{
        
         const existingUser = await User.findOne({email});
         if(existingUser) return res.status(400).json({msg: "user already exist"})
-
-        const hashedPassword = await bcrypt.hash(password,process.env.SALT_ROUNDS);
+    
+       const saltRounds = parseInt(process.env.SALT_ROUNDS) || 10;
+        const hashedPassword = await bcrypt.hash(password,saltRounds);
         const user = new User({name , email , password: hashedPassword});
         await user.save();
 
@@ -79,7 +81,7 @@ const signup = async(req, res)=>{
 const login = async(req,res)=>{
       try {
         const {email,password}= req.body;
-        if(!email && !password) return res.status(400).json({msg: "plz give me id or password"});
+        if(!email || !password) return res.status(400).json({msg: "plz give me id or password"});
 
         const user = await User.findOne({email});
 
@@ -87,8 +89,8 @@ const login = async(req,res)=>{
         const isMatch = await bcrypt.compare(password, user.password)
         if(!isMatch) return res.status(400).json({msg: "Invalid password"});
 
-        const {accessToken, refreshToken} = genereateToken(user);
-        res.json({accessToken,refreshToken})
+        const {accessToken, refreshToken} = generateToken(user);
+        res.json({msg: "login Sucessfully", accessToken, refreshToken});
 
       } catch (error) {
         console.log(error);
