@@ -39,15 +39,16 @@ const AuthPage = () => {
           email: formData.email,
           password: formData.password,
         });
-        alert(response.msg || "Login successful");
-        console.log('Log in successful:', response);
+        
+        console.log('Login successful:', response);
+        // Replace alert with better UI feedback
+        setError('');
         navigate('/dashboard'); // Redirect to dashboard after login
       } catch (err) {
-        console.log(err.msg);
+        console.error("Login error:", err);
         const errorMessage = err.msg || "Login failed. Please try again.";
-         setError(errorMessage);
-         console.error("Login error:", errorMessage);
-         alert(errorMessage);
+        setError(errorMessage);
+        // Remove alert and use state for error messages
       } finally {
         setLoading(false);
       }
@@ -71,9 +72,8 @@ const AuthPage = () => {
         setIsLogin(true);
         setFormData({...formData, name: '', confirmPassword: ''});
         setError('');
-        alert(`Signup successful: ${JSON.stringify(response)}`);
-          // Redirect to login after signup
-
+        // Replace alert with better UI feedback
+        // Redirect to login after signup
       } catch (err) {
         setError(err.message || 'Signup failed. Please try again.');
         console.error('Signup error:', err);
@@ -155,14 +155,7 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative overflow-hidden">
       {/* Import Google Fonts */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
-          body {
-            font-family: 'Poppins', sans-serif;
-          }
-        `
-      }} />
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
       {/* Background with traveling cartoon elements */}
       <div className="absolute inset-0 overflow-hidden">
@@ -247,7 +240,7 @@ const AuthPage = () => {
       }} />
 
       {/* Form Card */}
-      <div className="max-w-md w-full bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform transition-all ">
+      <div className="max-w-md w-full bg-white bg-opacity-90 backdrop-filter backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden transform transition-all">
         <div className="bg-gradient-to-r from-violet-600 to-indigo-600 py-6 px-6">
           <h2 className="text-center text-3xl font-bold text-white tracking-tight">
             {isLogin ? 'Welcome Traveler!' : 'Join Our Adventures'}
@@ -258,6 +251,12 @@ const AuthPage = () => {
         </div>
 
         <div className="p-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+          
           <form className="space-y-6" onSubmit={handleSubmit}>
             {!isLogin && (
               <div>
@@ -386,34 +385,34 @@ const AuthPage = () => {
 
             <div>
             <button
-    type="submit"
-    disabled={loading}
-    className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg transform transition-all duration-150 hover:scale-105"
-  >
-    <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-      {isLogin ? (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-        </svg>
-      ) : (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-        </svg>
-      )}
-    </span>
-    {loading ? (
-      <>
-        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Processing...
-      </>
-    ) : (
-      isLogin ? 'Continue Your Journey' : 'Start Your Adventure'
-    )}
-  </button>
+              type="submit"
+              disabled={loading}
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-lg transform transition-all duration-150 hover:scale-105"
+            >
+              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
+                {isLogin ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-300 group-hover:text-indigo-200" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </span>
+              {loading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                isLogin ? 'Continue Your Journey' : 'Start Your Adventure'
+              )}
+            </button>
             </div>
           </form>
 
@@ -428,34 +427,17 @@ const AuthPage = () => {
             </div>
 
             <div className="mt-6 grid grid-cols-1 gap-3">
-              <a
-                href="#"
+              <button
+                type="button"
                 className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600 transition-all duration-150 transform hover:scale-105"
               >
                 {/* Google Icon */}
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" 
                     fill="#4285F4" />
-                  <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" 
-                    fill="#34A853" clipPath="url(#clip0)" transform="translate(0 6)" />
-                  <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" 
-                    fill="#FBBC05" clipPath="url(#clip1)" transform="translate(0 3)" />
-                  <path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z" 
-                    fill="#EA4335" clipPath="url(#clip2)" transform="translate(0 9)" />
-                  <defs>
-                    <clipPath id="clip0">
-                      <rect width="24" height="6" fill="white"/>
-                    </clipPath>
-                    <clipPath id="clip1">
-                      <rect width="24" height="6" fill="white"/>
-                    </clipPath>
-                    <clipPath id="clip2">
-                      <rect width="24" height="6" fill="white"/>
-                    </clipPath>
-                  </defs>
                 </svg>
                 Continue with Google
-              </a>
+              </button>
             </div>
           </div>
 
