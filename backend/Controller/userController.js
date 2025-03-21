@@ -65,21 +65,38 @@ const login = async (req, res) => {
 };
 
 const refreshToken = async (req, res) => {
-  const { refreshToken } = req.body;
+  try {
+    const { refreshToken } = req.body;
 
-  if (!refreshToken)
-    return res.status(403).json({ msg: "Invalid refresh token" });
+    if (!refreshToken)
+      return res.status(403).json({ msg: "Invalid refresh token" });
 
-  jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY, (err, user) => {
-    if (err) return res.status(403).json({ msg: "Invalid refresh token" });
+    // Verify the refresh token
+    jwt.verify(refreshToken, process.env.REFRESH_SECRET_KEY, async (err, decoded) => {
+      if (err) return res.status(403).json({ msg: "Invalid refresh token" });
 
-    const newAcessToken = jwt.sign(
-      { id: user._id },
-      process.env.ACCESS_TOKEN_KEY,
-      { expiresIn: "1hr" }
-    );
-    res.json({ accessToken: newAcessToken });
-  });
+      try {
+        // Optionally verify the user exists in DB
+        const user = await User.findById(decoded.id);
+        if (!user) return res.status(403).json({ msg: "User not found" });
+
+        // Use the same key that's used in generateToken
+        const newAccessToken = jwt.sign(
+          { id: decoded.id },
+          process.env.ACCESS_SECRET_KEY,  // This should match the key in generateToken
+          { expiresIn: "1h" }
+        );
+        
+        res.json({ accessToken: newAccessToken });
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: "Server error" });
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
 };
 
 const forgotPassword = async (req, res) => {
