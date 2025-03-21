@@ -44,6 +44,8 @@ const AuthPage = () => {
         });
         
         console.log('Login successful:', response);
+        localStorage.setItem('accessToken', response.accessToken);
+        localStorage.setItem('refreshToken', response.refreshToken);
         // Replace alert with better UI feedback
         setIsAuthenticated(true);
         setFormData({ email: '', password: '', confirmPassword: '', name: '' });
