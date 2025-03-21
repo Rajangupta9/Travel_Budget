@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { passwordResetService } from '../controllers/authController';
 
 const ForgotPassword = ({ onBack }) => {
   const [step, setStep] = useState('email'); // 'email', 'otp', 'reset'
@@ -9,6 +10,7 @@ const ForgotPassword = ({ onBack }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [resetToken, setResetToken] = useState('');
 
   const handleEmailSubmit = async (e) => {
     e.preventDefault();
@@ -16,17 +18,14 @@ const ForgotPassword = ({ onBack }) => {
     setError('');
     
     try {
-      // Replace with your actual API call
-      // const response = await sendPasswordResetOTP({ email });
-      
-      // Simulating API call for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
+     
+      const response = await passwordResetService.requestReset(email);
       console.log('Sending OTP to:', email);
       
       setMessage(`OTP sent to ${email}. Please check your inbox.`);
       setStep('otp');
     } catch (err) {
-      setError(err.message || 'Failed to send OTP. Please try again.');
+      setError(err.msg|| 'Failed to send OTP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -38,14 +37,15 @@ const ForgotPassword = ({ onBack }) => {
     setError('');
     
     try {
-      // Replace with your actual API call
-      // const response = await verifyOTP({ email, otp });
-      
-      // Simulating API call for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log('Verifying OTP:', otp, 'for email:', email);
-      
+     
+      const response = await passwordResetService.verifyOTP(email, otp);
       setMessage('OTP verified successfully. Please set a new password.');
+      
+      
+      if (response.resetToken) {
+        setResetToken(response.resetToken);
+      }
+      
       setStep('reset');
     } catch (err) {
       setError(err.message || 'Invalid OTP. Please try again.');
@@ -66,11 +66,8 @@ const ForgotPassword = ({ onBack }) => {
     setError('');
     
     try {
-      // Replace with your actual API call
-      // const response = await resetPassword({ email, otp, newPassword });
       
-      // Simulating API call for demo
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await passwordResetService.resetPassword(resetToken, newPassword, otp);
       console.log('Resetting password for:', email);
       
       setMessage('Password reset successful!');
