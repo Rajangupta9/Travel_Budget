@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LoginUser, SignupUser } from '../controllers/authController';
 import { useNavigate } from 'react-router-dom';
 import ForgotPassword from './ForgotPassword';
+import TravelBudgetDashboard from './TravelBudgetDashboard';
 
 
 const AuthPage = () => {
