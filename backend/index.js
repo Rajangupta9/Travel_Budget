@@ -16,23 +16,17 @@ const app = express();
 const httpServer = http.createServer(app);
 
 app.use(express.json());
+
+// Fixed CORS configuration
 app.use(
-    cors({
-      origin: ["http://localhost:5173", "https://travel-budget-j7jp.onrender.com"], // ✅ Allow frontend
-      credentials: true, 
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-    })
-  );
-  
-  // ✅ Manually handle preflight requests
-  app.options("*", (req, res) => {
-    res.header("Access-Control-Allow-Origin", "http://localhost:5173");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.sendStatus(200);
-  });
+  cors({
+    origin: ["http://localhost:5173", "https://travel-budget-j7jp.onrender.com"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  })
+);
+
 app.use(cookieParser());
 
 connectdb();
@@ -41,11 +35,10 @@ app.use("/user", userRouter);
 app.use("/trip", tripRouter);
 app.use("/expense", ExpenseRouter);
 app.use("/report", ReportRouter);
-
 app.use("/io", ioRouter);
 
 app.get("/", (req, res) => {
-    res.send("API is working");
+  res.send("API is working");
 });
 
 // Initialize socket.io
@@ -57,5 +50,5 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5001;
 
 httpServer.listen(PORT, () => {
-    console.log(`Your server is running on http://localhost:${PORT}`);
+  console.log(`Your server is running on http://localhost:${PORT}`);
 });
