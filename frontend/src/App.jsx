@@ -1,7 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import AuthPage from "./components/AuthPage";
-import Signup from "./components/Signup";
 import TravelBudgetDashboard from "./components/TravelBudgetDashboard";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./components/HomePage";
@@ -17,7 +16,6 @@ const AuthChecker = ({ children }) => {
       // Only redirect if not already on Auth or Signup page
       if (!token && 
           location.pathname !== '/Auth' && 
-          location.pathname !== '/signup' && 
           location.pathname !== '/') {
         navigate('/Auth');
       }
@@ -50,7 +48,6 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path='/Auth' element={<AuthPage />} />
-          <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard1" element={
             <ProtectedRoute>
               <Dashboard />
