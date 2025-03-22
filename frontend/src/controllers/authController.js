@@ -67,4 +67,17 @@ export const passwordResetService = {
   }
 };
 
+export const getProfile = async () => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await api.get("/user/profile", { 
+      headers: { Authorization: `Bearer ${token}` } 
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response ? error.response.data : error.message;
+  }
+};
+
+
 export default api;
