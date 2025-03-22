@@ -43,7 +43,7 @@ const AuthPage = () => {
           password: formData.password,
         });
         
-        console.log('Login successful:', response);
+        console.log('Login successful:');
         localStorage.setItem('accessToken', response.accessToken);
         localStorage.setItem('refreshToken', response.refreshToken);
         // Replace alert with better UI feedback
