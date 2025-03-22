@@ -8,6 +8,9 @@ require("dotenv").config();
 const userRouter = require("./Routes/userRoutes");
 const ioRouter = require("./Routes/ioRoutes");
 const tripRouter = require("./Routes/tripRoutes");
+const ExpenseRouter = require("./Routes/expenceRoutes");
+const ReportRouter = require("./Routes/reportRoutes");
+const { notFound, errorHandler } = require("./middleware/errorHandling");
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -26,6 +29,8 @@ connectdb();
 
 app.use("/user", userRouter);
 app.use("/trip", tripRouter);
+app.use("/expense", ExpenseRouter);
+app.use("/report", ReportRouter);
 
 app.use("/io", ioRouter);
 
@@ -35,6 +40,9 @@ app.get("/", (req, res) => {
 
 // Initialize socket.io
 initializeSocket(httpServer);
+
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
 
