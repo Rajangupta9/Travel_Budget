@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProfile } from "../controllers/authController";
-import { DollarSign, CreditCard, TrendingUp, Calendar } from "lucide-react";
-import api from "../services/api";
+// import { getProfile } from "../controllers/authController";
+import { DollarSign, CreditCard, TrendingUp, Calendar, Plus } from "lucide-react";
 
 // Import components
 import Sidebar from "../components/layout/Sidebar";
@@ -57,34 +56,31 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("accessToken");
 
-        if (!token) {
-          navigate("/");
-          return;
-        }
-
-        // Fetch user profile
+        // Commented out API call - will be implemented later
+        // const userRes = await getProfile();
+        // console.log(userRes);
+        // setUser(userRes.name);
         
-        const userRes =await getProfile();
-         
-        setUser(userRes.name);
+        // Mock user data instead of API call
+        setUser("Test User");
         
-        // Fetch trips
-        const tripsRes = await axios.get("/api/trips", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Mock trip data instead of API call
+        const mockTrip = {
+          id: 1,
+          name: "Trip to Japan",  
+          dates: "2022-10-01 - 2022-10-15",
+          budget: 2000,
+        };
+        
+        setUpcomingTrips([mockTrip]);
+        setActiveTrip(mockTrip.name);
 
-        if (tripsRes.data.length > 0) {
-          setUpcomingTrips(tripsRes.data);
-          setActiveTrip(tripsRes.data[0].name);
-
-          // Set tripId for new expenses
-          setNewExpense((prev) => ({
-            ...prev,
-            tripId: tripsRes.data[0].id,
-          }));
-        }
+        // Set tripId for new expenses
+        setNewExpense((prev) => ({
+          ...prev,
+          tripId: mockTrip.id,
+        }));
 
         setLoading(false);
       } catch (err) {
@@ -106,24 +102,54 @@ const Dashboard = () => {
 
       try {
         setLoading(true);
-        const token = localStorage.getItem("accessToken");
 
         // Find the trip ID based on the active trip name
         const currentTrip = upcomingTrips.find(
           (trip) => trip.name === activeTrip
         );
-        if (!currentTrip) return;
+        
+        if (!currentTrip) {
+          setLoading(false);
+          return;
+        }
 
-        // Fetch expenses for the active trip
-        const expensesRes = await axios.get(
-          `/api/expenses?tripId=${currentTrip.id}`,
+        // Mock expense data instead of API call
+        const mockExpenses = [
           {
-            headers: { Authorization: `Bearer ${token}` },
+            id: 1,
+            category: "Food",
+            description: "Sushi",
+            amount: 50,
+            date: "2022-10-02",
+            tripId: currentTrip.id,
+          },
+          {
+            id: 2,
+            category: "Transport",
+            description: "Train ticket",
+            amount: 30,
+            date: "2022-10-03",
+            tripId: currentTrip.id,
+          },
+          {
+            id: 3,
+            category: "Accommodation",
+            description: "Hotel in Tokyo",
+            amount: 120,
+            date: "2022-10-01",
+            tripId: currentTrip.id,
+          },
+          {
+            id: 4,
+            category: "Activities",
+            description: "Museum tickets",
+            amount: 25,
+            date: "2022-10-04",
+            tripId: currentTrip.id,
           }
-        );
-        0;
+        ];
 
-        setRecentExpenses(expensesRes.data);
+        setRecentExpenses(mockExpenses);
 
         // Update new expense form with current trip ID
         setNewExpense((prev) => ({
@@ -132,10 +158,10 @@ const Dashboard = () => {
         }));
 
         // Generate pie chart data from expenses
-        generatePieChartData(expensesRes.data);
+        generatePieChartData(mockExpenses);
 
         // Generate bar chart data from expenses
-        generateBarChartData(expensesRes.data, currentTrip);
+        generateBarChartData(mockExpenses, currentTrip);
 
         setLoading(false);
       } catch (err) {
@@ -158,8 +184,8 @@ const Dashboard = () => {
 
     if (trip) {
       // Calculate days remaining
-      const endDateParts = trip.dates.split(" - ")[1].split(", ");
-      const endDate = new Date(`${endDateParts[0]}, ${endDateParts[1]}`);
+      const dateRange = trip.dates.split(" - ");
+      const endDate = new Date(dateRange[1]);
       const today = new Date();
       const daysRemaining = Math.max(
         0,
@@ -173,11 +199,10 @@ const Dashboard = () => {
       );
 
       // Calculate daily average (spent divided by days elapsed)
-      const startDateParts = trip.dates.split(" - ")[0].split(", ");
-      const startDate = new Date(`${startDateParts[0]}, ${startDateParts[1]}`);
+      const startDate = new Date(dateRange[0]);
       const totalDays = Math.ceil(
         (endDate - startDate) / (1000 * 60 * 60 * 24)
-      );
+      ) + 1;
       const daysElapsed = Math.max(1, totalDays - daysRemaining);
       const dailyAverage = Math.round(spent / daysElapsed);
 
@@ -231,11 +256,8 @@ const Dashboard = () => {
 
     // Parse trip dates
     const dateRange = trip.dates.split(" - ");
-    const startDateParts = dateRange[0].split(", ");
-    const endDateParts = dateRange[1].split(", ");
-
-    const startDate = new Date(`${startDateParts[0]}, ${startDateParts[1]}`);
-    const endDate = new Date(`${endDateParts[0]}, ${endDateParts[1]}`);
+    const startDate = new Date(dateRange[0]);
+    const endDate = new Date(dateRange[1]);
 
     // Calculate daily budget
     const totalDays =
@@ -284,7 +306,8 @@ const Dashboard = () => {
 
   // Function to handle logout
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
+    // Commented out token removal - will be implemented with middleware
+    // localStorage.removeItem("accessToken");
     navigate("/login");
   };
 
@@ -293,18 +316,26 @@ const Dashboard = () => {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("accessToken");
+      // Commented out API call - will be implemented later
+      // const token = localStorage.getItem("accessToken");
+      // const expenseData = {
+      //   ...newExpense,
+      //   amount: parseFloat(newExpense.amount),
+      // };
+      // await axios.post("/api/expenses", expenseData, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
 
-      // Add trip ID to the expense
-      const expenseData = {
+      // Create a new mock expense
+      const newExpenseData = {
+        id: recentExpenses.length + 1,
         ...newExpense,
-        amount: parseFloat(newExpense.amount),
+        amount: parseFloat(newExpense.amount) || 0,
       };
 
-      // Send request to create expense
-      await axios.post("/api/expenses", expenseData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Add to local state instead of API call
+      const updatedExpenses = [...recentExpenses, newExpenseData];
+      setRecentExpenses(updatedExpenses);
 
       // Clear form and close modal
       setNewExpense({
@@ -312,19 +343,14 @@ const Dashboard = () => {
         description: "",
         amount: "",
         date: new Date().toISOString().slice(0, 10),
-        tripId: expenseData.tripId,
+        tripId: newExpenseData.tripId,
       });
       setShowAddExpenseModal(false);
 
-      // Refetch expenses to update the list
+      // Update charts
       const trip = upcomingTrips.find((trip) => trip.name === activeTrip);
-      const expensesRes = await axios.get(`/api/expenses?tripId=${trip.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setRecentExpenses(expensesRes.data);
-      generatePieChartData(expensesRes.data);
-      generateBarChartData(expensesRes.data, trip);
+      generatePieChartData(updatedExpenses);
+      generateBarChartData(updatedExpenses, trip);
     } catch (err) {
       console.error("Error adding expense:", err);
       setError("Failed to add expense. Please try again.");
@@ -336,23 +362,29 @@ const Dashboard = () => {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("accessToken");
+      // Commented out API call - will be implemented later
+      // const token = localStorage.getItem("accessToken");
+      // const response = await axios.post(
+      //   "/api/trips",
+      //   {
+      //     ...newTrip,
+      //     budget: parseFloat(newTrip.budget),
+      //   },
+      //   {
+      //     headers: { Authorization: `Bearer ${token}` },
+      //   }
+      // );
 
-      // Send request to create trip
-      const response = await axios.post(
-        "/api/trips",
-        {
-          ...newTrip,
-          budget: parseFloat(newTrip.budget),
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      // Create a new mock trip
+      const newTripData = {
+        id: upcomingTrips.length + 1,
+        ...newTrip,
+        budget: parseFloat(newTrip.budget) || 0,
+      };
 
-      // Add new trip to the list and set as active
-      const newTripData = response.data;
-      setUpcomingTrips([...upcomingTrips, newTripData]);
+      // Add to local state instead of API call
+      const updatedTrips = [...upcomingTrips, newTripData];
+      setUpcomingTrips(updatedTrips);
       setActiveTrip(newTripData.name);
 
       // Clear form and close modal
@@ -371,13 +403,12 @@ const Dashboard = () => {
   // Function to handle deleting an expense
   const handleDeleteExpense = async (index) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      const expenseId = recentExpenses[index].id;
-
-      // Send request to delete expense
-      await axios.delete(`/api/expenses/${expenseId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // Commented out API call - will be implemented later
+      // const token = localStorage.getItem("accessToken");
+      // const expenseId = recentExpenses[index].id;
+      // await axios.delete(`/api/expenses/${expenseId}`, {
+      //   headers: { Authorization: `Bearer ${token}` },
+      // });
 
       // Remove from local state
       const updatedExpenses = [...recentExpenses];
