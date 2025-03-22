@@ -16,13 +16,23 @@ const app = express();
 const httpServer = http.createServer(app);
 
 app.use(express.json());
-app.use(cors({
-    origin: "*", // or specify your frontend domain like 'http://localhost:3000'
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'headers'], // Added 'headers' here
-    credentials: true
-  }));
+app.use(
+    cors({
+      origin: ["http://localhost:5173", "https://travel-budget-j7jp.onrender.com"], // ✅ Allow frontend
+      credentials: true, 
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    })
+  );
+  
+  // ✅ Manually handle preflight requests
+  app.options("*", (req, res) => {
+    res.header("Access-Control-Allow-Origin", "http://localhost:5173");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.sendStatus(200);
+  });
 app.use(cookieParser());
 
 connectdb();
