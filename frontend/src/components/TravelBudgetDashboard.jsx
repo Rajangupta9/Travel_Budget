@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+
 import {
   PieChart,
   Pie,
@@ -39,6 +41,7 @@ const TravelBudgetDashboard = () => {
   const [activeTrip, setActiveTrip] = useState("Japan Trip");
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [showAddTripModal, setShowAddTripModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [newExpense, setNewExpense] = useState({
     category: "Food",
     description: "",
@@ -126,6 +129,22 @@ const TravelBudgetDashboard = () => {
     remainingBudget: 700,
     daysRemaining: 2,
   });
+  const navigate = useNavigate()
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    
+    // Simulate processing time (remove this in real implementation)
+    setTimeout(() => {
+      // Clear local storage
+      localStorage.clear();
+      
+      // Add any additional logout logic
+      // window.location.href = "/login"; // Uncomment to redirect after logout
+      navigate('/auth');
+      setIsLoggingOut(false);
+      console.log("Logged out successfully");
+    }, 1000); // Simulating 1 second processing
+  };
 
   // Update trip data when active trip changes
   useEffect(() => {
@@ -550,9 +569,21 @@ const TravelBudgetDashboard = () => {
             <Settings size={20} />
             {isSidebarOpen && <span className="ml-3">Settings</span>}
           </div>
-          <div className="flex items-center px-4 py-3 text-indigo-100 hover:bg-indigo-700 rounded-lg cursor-pointer">
-            <LogOut size={20} />
-            {isSidebarOpen && <span className="ml-3">Logout</span>}
+          <div
+            onClick={handleLogout}
+            className="flex items-center px-4 py-3 text-indigo-100 hover:bg-indigo-700 rounded-lg cursor-pointer"
+          >
+            {isLoggingOut ? (
+              <>
+                <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                {isSidebarOpen && <span className="ml-3">Logging out...</span>}
+              </>
+            ) : (
+              <>
+                <LogOut size={20} />
+                {isSidebarOpen && <span className="ml-3">Logout</span>}
+              </>
+            )}
           </div>
 
           {isSidebarOpen && (
