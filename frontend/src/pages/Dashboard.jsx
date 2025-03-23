@@ -56,6 +56,17 @@ export const enhancedTripService = {
       throw error;
     }
   },
+
+  // Add this to your enhancedTripService object
+deleteTrip: async (tripId) => {
+  try {
+    // Make API call to delete the trip
+    await tripService.deleteTrip(tripId);
+  } catch (error) {
+    console.error("Error deleting trip:", error);
+    throw error;
+  }
+},
   
   
   // Get expenses for a specific trip
