@@ -48,12 +48,12 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path='/Auth' element={<AuthPage />} />
-          <Route path="/dashboard1" element={
+          <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
           } />
-          <Route path="/dashboard" element={
+          <Route path="/dashboard1" element={
             <ProtectedRoute>
               <TravelBudgetDashboard />
             </ProtectedRoute>

@@ -204,9 +204,9 @@ export const expenseService = {
   },
 
   // Get all expenses for the user
-  getExpenses: async () => {
+  getExpenses: async (queryParams = {}) => {
     try {
-      const response = await api.get("/expense");
+      const response = await api.get("/expense", { params: queryParams });
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: "Failed to fetch expenses" };
