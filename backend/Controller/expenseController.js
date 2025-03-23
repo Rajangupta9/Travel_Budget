@@ -1,51 +1,65 @@
 const Expense = require('../Model/expenceModel');
 const Trip = require('../Model/tripModel');
+const mongoose = require('mongoose');
 
 const createExpense = async (req, res) => {
-    try {
-      const { trip: tripId, category, amount, date } = req.body;
-      
-      // Validate amount is positive
-      if (amount <= 0) {
-        return res.status(400).json({ message: 'Amount must be greater than zero' });
-      }
-      
-      // Check if trip exists and belongs to current user
-      const trip = await Trip.findById(tripId);
-      if (!trip) {
-        return res.status(404).json({ message: 'Trip not found' });
-      }
-      
-      if (trip.user.toString() !== req.user.id) {
-        return res.status(403).json({ message: 'Not authorized to add expenses to this trip' });
-      }
-      
-      // Create new expense
-      const newExpense = new Expense({
-        trip: tripId,
-        category,
-        amount,
-        date
-      });
-      
-      const expense = await newExpense.save();
-      
-      // Update trip's remaining budget and add expense to trip's expenses array
-      trip.remainingBudget = Math.max(0, trip.remainingBudget - amount);
-      trip.expenses.push(expense._id);
-      await trip.save();
-      
-      res.status(201).json(expense);
-    } catch (error) {
-      console.error('Error creating expense:', error);
-      res.status(500).json({ message: 'Server error' });
+  try {
+    const { trip, category, amount, date, notes } = req.body;
+    
+    // Validate trip ID format
+    if (!mongoose.Types.ObjectId.isValid(trip)) {
+      return res.status(400).json({ success: false, message: 'Invalid trip ID format' });
     }
+    
+    // Check if trip exists
+    const tripExists = await Trip.findById(trip);
+    if (!tripExists) {
+      return res.status(404).json({ success: false, message: 'Trip not found' });
+    }
+    
+    // Verify the trip belongs to the current user
+    if (tripExists.user.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: 'You do not have permission to add expenses to this trip' });
+    }
+    
+    // Create new expense
+    const newExpense = new Expense({
+      trip,
+      category,
+      amount: parseFloat(amount),
+      date: new Date(date),
+      notes
+    });
+    
+    // Save expense
+    const savedExpense = await newExpense.save();
+    
+    // Return the newly created expense
+    res.status(201).json({
+      success: true,
+      message: 'Expense created successfully',
+      data: savedExpense
+    });
+    
+  } catch (error) {
+    console.error('Error creating expense:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({ success: false, message: messages.join(', ') });
+    }
+    
+    res.status(500).json({
+      success: false,
+      message: 'Server error while creating expense'
+    });
+  }
   };
 
   const getExpenses = async (req, res) => {
     try {
-      const { tripId } = req.params;
-      
+      const { tripId } = req.query;
       // Check if trip exists and belongs to current user
       const trip = await Trip.findById(tripId);
       if (!trip) {
@@ -207,6 +221,7 @@ const createExpense = async (req, res) => {
       
       res.json({
         totalSpent,
+        totalBudget: trip.totalBudget,
         remainingBudget: trip.remainingBudget,
         categoryBreakdown,
         dailySpending

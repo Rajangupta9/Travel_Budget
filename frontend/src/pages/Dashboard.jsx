@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// import { getProfile } from "../controllers/authController";
+import { getProfile } from "../controllers/authController";
 import { DollarSign, CreditCard, TrendingUp, Calendar, Plus } from "lucide-react";
+import {tripService} from "../controllers/authController";
 
 // Import components
 import Sidebar from "../components/layout/Sidebar";
@@ -58,21 +59,16 @@ const Dashboard = () => {
         setLoading(true);
 
         // Commented out API call - will be implemented later
-        // const userRes = await getProfile();
+        const userRes = await getProfile();
         // console.log(userRes);
         // setUser(userRes.name);
         
         // Mock user data instead of API call
-        setUser("Test User");
+        setUser({ name: userRes.name , planType: userRes.premiumPlan});
         
         // Mock trip data instead of API call
-        const mockTrip = {
-          id: 1,
-          name: "Trip to Japan",  
-          dates: "2022-10-01 - 2022-10-15",
-          budget: 2000,
-        };
-        
+        const mockTrip = await tripService.getTrips();
+        console.log(mockTrip);
         setUpcomingTrips([mockTrip]);
         setActiveTrip(mockTrip.name);
 

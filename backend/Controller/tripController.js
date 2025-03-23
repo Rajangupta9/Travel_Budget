@@ -1,5 +1,5 @@
 const Trip = require("../Model/tripModel");
-
+const cron = require('node-cron');
 
 
 
@@ -27,7 +27,7 @@ const createTrip = async (req, res) => {
       res.status(201).json(trip);
     } catch (error) {
       console.error('Error creating trip:', error);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ msg: error.message});
     }
 };
 
@@ -149,5 +149,27 @@ const getTrips = async (req, res) => {
     const days = Math.max(1, daysDifference);
     return budget / days;
   }
+
+  cron.schedule('0 * * * *', async () => {
+    try {
+        const today = new Date();
+
+        // Set upcoming trips
+        await Trip.updateMany({ startDate: { $gt: today } }, { $set: { name: 'upcoming' } });
+
+        // Set active trips
+        await Trip.updateMany(
+            { startDate: { $lte: today }, endDate: { $gte: today } }, 
+            { $set: { name: 'active' } }
+        );
+
+        // Set deactive trips
+        await Trip.updateMany({ endDate: { $lt: today } }, { $set: { name: 'deactive' } });
+
+        console.log('Updated trip statuses.');
+    } catch (error) {
+        console.error('Error updating trips:', error);
+    }
+});
   
   module.exports = { createTrip, getTrips, getTripById, updatetriptById, deleteTripById };

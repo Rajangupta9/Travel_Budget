@@ -76,5 +76,183 @@ export const getProfile = async () => {
   }
 };
 
+export const tripService = {
+  // Create a new trip
+  createTrip: async (tripData) => {
+    try {
+      const response = await api.post("/trip/create-trip", tripData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to create trip" };
+    }
+  },
 
-export default api;
+  // Get all trips for the user
+  getTrips: async () => {
+    try {
+      const response = await api.get("/trip/trips");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch trips" };
+    }
+  },
+
+  // Get a specific trip by ID
+  getTripById: async (tripId) => {
+    try {
+      const response = await api.get(`/trip/${tripId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch trip details" };
+    }
+  },
+
+  // Update a trip
+  updateTrip: async (tripId, tripData) => {
+    try {
+      const response = await api.put(`/trip/update-trip/${tripId}`, tripData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to update trip" };
+    }
+  },
+
+  // Delete a trip
+  deleteTrip: async (tripId) => {
+    try {
+      const response = await api.delete(`/trip/delete-trip/${tripId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to delete trip" };
+    }
+  }
+};
+
+// Report related API services
+export const reportService = {
+  // Create a new report
+  createReport: async (reportData) => {
+    try {
+      const response = await api.post("/report/create", reportData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to create report" };
+    }
+  },
+
+  // Get reports for the user
+  getReports: async () => {
+    try {
+      const response = await api.get("/report");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch reports" };
+    }
+  },
+
+  // Get a specific report by ID
+  getReportById: async (reportId) => {
+    try {
+      const response = await api.get(`/report/${reportId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch report details" };
+    }
+  },
+
+  // Delete a report
+  deleteReport: async (reportId) => {
+    try {
+      const response = await api.delete(`/report/${reportId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to delete report" };
+    }
+  },
+
+  // Get all reports (admin function)
+  getAllReports: async () => {
+    try {
+      const response = await api.get("/report/all");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch all reports" };
+    }
+  },
+
+  // Compare reports
+  compareReports: async (reportIds) => {
+    try {
+      const response = await api.get("/report/compare", { params: { reportIds } });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to compare reports" };
+    }
+  }
+};
+
+// Expense related API services
+export const expenseService = {
+  // Create a new expense
+  createExpense: async (expenseData) => {
+    try {
+      const response = await api.post("/expense/create", expenseData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to create expense" };
+    }
+  },
+
+  // Get all expenses for the user
+  getExpenses: async () => {
+    try {
+      const response = await api.get("/expense");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch expenses" };
+    }
+  },
+
+  // Get a specific expense by ID
+  getExpenseById: async (expenseId) => {
+    try {
+      const response = await api.get(`/expense/${expenseId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch expense details" };
+    }
+  },
+
+  // Update an expense
+  updateExpense: async (expenseId, expenseData) => {
+    try {
+      const response = await api.put(`/expense/${expenseId}`, expenseData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to update expense" };
+    }
+  },
+
+  // Delete an expense
+  deleteExpense: async (expenseId) => {
+    try {
+      const response = await api.delete(`/expense/${expenseId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to delete expense" };
+    }
+  },
+
+  // Get expense statistics for a trip
+  getExpenseStatistics: async (tripId) => {
+    try {
+      const response = await api.get(`/expense/statistics/${tripId}`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || { message: "Failed to fetch expense statistics" };
+    }
+  }
+};
+
+
+
