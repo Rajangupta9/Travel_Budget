@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Compass,
   CreditCard,
@@ -13,6 +13,8 @@ import {
   X,
 } from "lucide-react";
 
+import { useNavigate } from "react-router-dom";
+
 const Sidebar = ({
   isSidebarOpen,
   toggleSidebar,
@@ -21,8 +23,27 @@ const Sidebar = ({
   setActiveTrip,
   setShowAddTripModal,
   user,
-  handleLogout,
+  // Remove handleLogout from props since we define it inside
 }) => {
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Define logout handler in the component
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    
+    // Simulate processing time (remove this in real implementation)
+    setTimeout(() => {
+      // Clear local storage
+      localStorage.clear();
+      
+      // Navigate to auth page
+      navigate('/auth');
+      setIsLoggingOut(false);
+      console.log("Logged out successfully");
+    }, 1000); // Simulating 1 second processing
+  };
+
   return (
     <div
       className={`bg-indigo-800 text-white ${
@@ -122,7 +143,9 @@ const Sidebar = ({
           onClick={handleLogout}
         >
           <LogOut size={20} />
-          {isSidebarOpen && <span className="ml-3">Logout</span>}
+          {isSidebarOpen && (
+            <span className="ml-3">{isLoggingOut ? "Logging out..." : "Logout"}</span>
+          )}
         </div>
 
         {isSidebarOpen && user && (
