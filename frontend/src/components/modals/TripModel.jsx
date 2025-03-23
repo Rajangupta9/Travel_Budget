@@ -21,28 +21,37 @@ const TripModal = ({
       // Starting a new selection
       setStartDate(date);
       setEndDate(null);
+      // Reset the dateRange in newTrip when starting a new selection
+      setNewTrip({ ...newTrip, dates: "" });
     } else {
       // Completing a selection
       if (date >= startDate) {
         setEndDate(date);
         
-        // Format dates for display
-        const start = new Date(startDate);
-        const end = new Date(date);
-        const formattedStartDate = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const formattedEndDate = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const dateRange = `${formattedStartDate} - ${formattedEndDate}`;
+        // Format dates as numeric year-month-day
+        const formatDateNumeric = (date) => {
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0'); // +1 because months are 0-indexed
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        };
+        
+        const numericStartDate = formatDateNumeric(startDate);
+        const numericEndDate = formatDateNumeric(date);
+        const dateRange = `${numericStartDate} - ${numericEndDate}`;
         
         setNewTrip({ ...newTrip, dates: dateRange });
         setShowDatePicker(false);
       } else {
-        // If end date is before start date, reset selection
+        // If end date is before start date, use it as the new start date
         setStartDate(date);
         setEndDate(null);
+        // Also update the user that we're restarting the selection
+        setNewTrip({ ...newTrip, dates: "" });
       }
     }
   };
-
+  
   const formatDateForDisplay = (dateStr) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);

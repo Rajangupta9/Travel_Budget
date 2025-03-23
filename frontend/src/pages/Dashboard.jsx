@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "../controllers/authController";
-import { DollarSign, CreditCard, TrendingUp, Calendar, Plus } from "lucide-react";
+import { IndianRupee , CreditCard, TrendingUp, Calendar, Plus } from "lucide-react";
 import { tripService , expenseService } from "../controllers/authController";
 
 // Import components
@@ -470,6 +470,7 @@ const Dashboard = () => {
 
   // Function to handle logout
   const handleLogout = () => {
+    
     navigate("/login");
   };
 
@@ -722,7 +723,7 @@ const Dashboard = () => {
                     text: `$${currentTripData.remainingBudget.toLocaleString()} remaining`,
                     className: "text-sm text-gray-500",
                   }}
-                  icon={<DollarSign className="text-green-500" />}
+                  icon={<IndianRupee  className="text-green-500" />}
                 />
                 <BudgetCard
                   title="Spent So Far"

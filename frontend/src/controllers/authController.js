@@ -13,7 +13,6 @@ import api from "../services/api";
  export const LoginUser = async (credentials) => {
   try {
     const response = await api.post("/user/login", credentials);
-    console.log(response.data);
     return response.data;
   } catch (error) {
     throw error.response ? error.response.data : error.message;
