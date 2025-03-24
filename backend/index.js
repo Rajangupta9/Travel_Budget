@@ -23,7 +23,7 @@ app.use(
     origin: ["http://localhost:5173", "https://travel-budget-zeta.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    allowedHeaders: ["Content-Type", "Authorization" , "x-new-access-token" , "x-refresh-token"]
   })
 );
 
