@@ -41,9 +41,49 @@ const ExpenseTable = ({
     );
   };
   
-  // Format date based on how recent it is
+  // Enhanced format date to handle different date formats
   const formatDate = (dateString) => {
-    const expenseDate = new Date(dateString);
+    if (!dateString) return "N/A";
+    
+    // Try to create a valid date object
+    let expenseDate;
+    
+    try {
+      // Handle different date formats that might be coming from the database
+      if (typeof dateString === 'number') {
+        // Handle timestamp
+        expenseDate = new Date(dateString);
+      } else if (typeof dateString === 'string') {
+        // Try parsing the string date
+        expenseDate = new Date(dateString);
+        
+        // If invalid, try additional formats
+        if (isNaN(expenseDate.getTime())) {
+          // Try DD/MM/YYYY format
+          const parts = dateString.split(/[/.-]/);
+          if (parts.length === 3) {
+            // Try different date formats
+            expenseDate = new Date(parts[2], parts[1] - 1, parts[0]); // DD/MM/YYYY
+            
+            // If still invalid, try MM/DD/YYYY
+            if (isNaN(expenseDate.getTime())) {
+              expenseDate = new Date(parts[2], parts[0] - 1, parts[1]); // MM/DD/YYYY
+            }
+          }
+        }
+      } else if (dateString instanceof Date) {
+        expenseDate = dateString;
+      }
+    } catch (e) {
+      console.error("Error parsing date:", e);
+      return "Invalid date";
+    }
+    
+    // Check if date is still invalid after all attempts
+    if (!expenseDate || isNaN(expenseDate.getTime())) {
+      return "Invalid date";
+    }
+    
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const moment = require('moment-timezone');
 
 const ExpenseSchema = new mongoose.Schema({
   trip: {
@@ -20,6 +21,10 @@ const ExpenseSchema = new mongoose.Schema({
   date: {
     type: Date,
     required: true,
+    set: function(val) {
+      // Convert the input date to IST
+      return moment(val).tz('Asia/Kolkata').toDate();
+    },
     validate: {
       validator: async function(value) {
         // Only run validation on new documents or when date is modified
@@ -28,7 +33,14 @@ const ExpenseSchema = new mongoose.Schema({
           const Trip = mongoose.models.Trip || mongoose.model('Trip');
           const trip = await Trip.findById(this.trip);
           if (!trip) return false;
-          return value >= trip.startDate && value <= trip.endDate;
+          
+          // Compare dates in IST timezone
+          const expenseDate = moment(value).tz('Asia/Kolkata');
+          const tripStartDate = moment(trip.startDate).tz('Asia/Kolkata');
+          const tripEndDate = moment(trip.endDate).tz('Asia/Kolkata');
+          
+          return expenseDate.isSameOrAfter(tripStartDate) && 
+                 expenseDate.isSameOrBefore(tripEndDate);
         }
         return true;
       },
@@ -39,13 +51,14 @@ const ExpenseSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  // Add a flag to track if this expense has been processed
   processed: {
     type: Boolean,
     default: false
   }
 }, {
-  timestamps: true // Adds createdAt and updatedAt automatically
+  timestamps: { 
+    currentTime: () => moment().tz('Asia/Kolkata').toDate() 
+  } // Makes createdAt and updatedAt use IST
 });
 
 // ISSUE: The post-save middleware can cause infinite recursion when the Expense

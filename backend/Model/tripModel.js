@@ -7,10 +7,45 @@ const TripSchema = new mongoose.Schema({
     totalBudget: { type: Number, required: true, min: 0 },
     remainingBudget: { type: Number, min: 0, default: function () { return this.totalBudget; } },
     dailyAverage: { type: Number, min: 0, default: 0 },
-    startDate: { type: Date, required: true },
+    startDate: { 
+        type: Date, 
+        required: true,
+        get: function(date) {
+            // Convert to Indian Standard Time (IST = UTC+5:30)
+            if (date) {
+                return new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+            }
+            return date;
+        },
+        set: function(date) {
+            // Store in UTC but adjust for IST input
+            if (date) {
+                // If the date is already a Date object, use it; otherwise create one
+                const dateObj = typeof date === 'string' ? new Date(date) : date;
+                return dateObj;
+            }
+            return date;
+        }
+    },
     endDate: { 
         type: Date, 
-        required: true, 
+        required: true,
+        get: function(date) {
+            // Convert to Indian Standard Time (IST = UTC+5:30)
+            if (date) {
+                return new Date(date.getTime() + (5.5 * 60 * 60 * 1000));
+            }
+            return date;
+        },
+        set: function(date) {
+            // Store in UTC but adjust for IST input
+            if (date) {
+                // If the date is already a Date object, use it; otherwise create one
+                const dateObj = typeof date === 'string' ? new Date(date) : date;
+                return dateObj;
+            }
+            return date;
+        },
         validate: {
             validator: function (value) {
                 return value >= this.startDate;
@@ -20,10 +55,12 @@ const TripSchema = new mongoose.Schema({
     },
     expenses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Expense' }]
 }, {
-    timestamps: true, // Adds createdAt and updatedAt automatically
+    timestamps: {
+        currentTime: () => new Date(Date.now() + (5.5 * 60 * 60 * 1000))
+    }, // Adds createdAt and updatedAt automatically with IST
     // This allows us to return virtuals when we convert to JSON
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true }
 });
 
 // Virtual for trip duration in days
@@ -33,7 +70,8 @@ TripSchema.virtual('durationDays').get(function() {
 
 // Better function to update status
 TripSchema.methods.updateStatus = function() {
-    const today = new Date();
+    // Use current time in IST
+    const today = new Date(Date.now() + (5.5 * 60 * 60 * 1000));
     
     if (today < this.startDate) {
         this.name = 'upcoming';
@@ -44,6 +82,16 @@ TripSchema.methods.updateStatus = function() {
     }
     
     return this.name;
+};
+
+// Helper method to format dates in IST
+TripSchema.methods.formatDate = function(date) {
+    return date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+    });
 };
 
 // ISSUE: The checkTripOverlap function has a logical error in the query.
@@ -120,7 +168,8 @@ TripSchema.pre('findOneAndUpdate', async function(next) {
         
         // Update status based on new dates if needed
         if (update.startDate || update.endDate) {
-            const today = new Date();
+            // Use current time in IST
+            const today = new Date(Date.now() + (5.5 * 60 * 60 * 1000));
             const startDate = update.startDate || currentTrip.startDate;
             const endDate = update.endDate || currentTrip.endDate;
             

@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getProfile } from "../controllers/authController";
-import { IndianRupee , CreditCard, TrendingUp, Calendar, Plus } from "lucide-react";
-import { tripService , expenseService } from "../controllers/authController";
+import {
+  IndianRupee,
+  CreditCard,
+  TrendingUp,
+  Calendar,
+  Plus,
+} from "lucide-react";
+import { tripService, expenseService } from "../controllers/authController";
 
 // Import components
 import Sidebar from "../components/layout/Sidebar";
@@ -18,18 +24,18 @@ import { getCategoryIcon } from "../utils/categoryIcons";
 // Create a modified tripService for proper model integration
 export const enhancedTripService = {
   ...tripService,
-  
+
   // Get all trips with proper formatting from Trip model
   getTrips: async () => {
     try {
       const response = await tripService.getTrips();
       const today = new Date();
-      
+
       // Format trips to match the Trip schema
-      return response.map(trip => {
+      return response.map((trip) => {
         const startDate = new Date(trip.startDate);
         const endDate = new Date(trip.endDate);
-        
+
         // Determine status based on dates
         let status;
         if (today >= startDate && today <= endDate) {
@@ -39,16 +45,18 @@ export const enhancedTripService = {
         } else {
           status = "Upcoming";
         }
-        
+
         return {
           id: trip._id || trip.id,
           name: trip.tripName || trip.name,
-          dates: `${startDate.toISOString().slice(0, 10)} - ${endDate.toISOString().slice(0, 10)}`,
+          dates: `${startDate.toISOString().slice(0, 10)} - ${endDate
+            .toISOString()
+            .slice(0, 10)}`,
           budget: trip.totalBudget,
           remainingBudget: trip.remainingBudget,
           dailyAverage: trip.dailyAverage,
           status: status,
-          expenses: trip.expenses || []
+          expenses: trip.expenses || [],
         };
       });
     } catch (error) {
@@ -58,40 +66,40 @@ export const enhancedTripService = {
   },
 
   // Add this to your enhancedTripService object
-deleteTrip: async (tripId) => {
-  try {
-    // Make API call to delete the trip
-    await tripService.deleteTrip(tripId);
-  } catch (error) {
-    console.error("Error deleting trip:", error);
-    throw error;
-  }
-},
-  
-  
+  deleteTrip: async (tripId) => {
+    try {
+      // Make API call to delete the trip
+      const response = await tripService.deleteTrip(tripId);
+      return response;
+    } catch (error) {
+      console.error("Error deleting trip:", error);
+      throw error;
+    }
+  },
+
   // Get expenses for a specific trip
   getExpenses: async (tripId) => {
     try {
       // This would be an API call to fetch expenses from the Expense model
-      const response = await expenseService.getExpenses({tripId : tripId});
-      
-      const data = response
-      
+      const response = await expenseService.getExpenses({ tripId: tripId });
+
+      const data = response;
+
       // Format expenses to match the Expense schema
-      return data.map(expense => ({
+      return data.map((expense) => ({
         id: expense._id,
         category: expense.category,
         description: expense.notes,
         amount: expense.amount,
         date: new Date(expense.date).toISOString().slice(0, 10),
-        tripId: expense.trip
+        tripId: expense.trip,
       }));
     } catch (error) {
       console.error("Error fetching expenses:", error);
       throw error;
     }
   },
-  
+
   // Add a new expense
   addExpense: async (expenseData) => {
     try {
@@ -101,9 +109,9 @@ deleteTrip: async (tripId) => {
         category: expenseData.category,
         amount: parseFloat(expenseData.amount),
         date: new Date(expenseData.date),
-        notes: expenseData.description
+        notes: expenseData.description,
       };
-      
+
       // This would be an API call to create an expense in the Expense model
       const response = await expenseService.createExpense(formattedData);
       console.log(response);
@@ -113,7 +121,30 @@ deleteTrip: async (tripId) => {
       throw error;
     }
   },
-  
+
+  // Add this to your enhancedTripService object
+  updateExpense: async (expenseId, expenseData) => {
+    try {
+      // Format data to match Expense schema
+      const formattedData = {
+        category: expenseData.category,
+        amount: parseFloat(expenseData.amount),
+        date: new Date(expenseData.date),
+        notes: expenseData.description,
+      };
+
+      // API call to update expense
+      const response = await expenseService.updateExpense(
+        expenseId,
+        formattedData
+      );
+      return response;
+    } catch (error) {
+      console.error("Error updating expense:", error);
+      throw error;
+    }
+  },
+
   // Delete an expense
   deleteExpense: async (expenseId) => {
     try {
@@ -124,31 +155,31 @@ deleteTrip: async (tripId) => {
       throw error;
     }
   },
-  
+
   // Add a new trip
   addTrip: async (tripData) => {
     try {
       // Parse date range
-      const [startDate, endDate] = tripData.dates.split(' - ');
-      
+      const [startDate, endDate] = tripData.dates.split(" - ");
+
       // Format data to match Trip schema
       const formattedData = {
         tripName: tripData.name,
         totalBudget: parseFloat(tripData.budget),
         startDate: new Date(startDate),
-        endDate: new Date(endDate)
+        endDate: new Date(endDate),
       };
-      
+
       // This would be an API call to create a trip in the Trip model
       const response = await tripService.createTrip(formattedData);
       console.log(response);
-      
+
       return await response.json();
     } catch (error) {
       console.error("Error adding trip:", error);
       throw error;
     }
-  }
+  },
 };
 
 const Dashboard = () => {
@@ -156,6 +187,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   // State management
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [showEditExpenseModal, setShowEditExpenseModal] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [activeTrip, setActiveTrip] = useState("");
   const [activeTripDates, setActiveTripDates] = useState(null);
@@ -194,34 +227,35 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-  
+
         // Fetch user profile
         const userRes = await getProfile();
         setUser({ name: userRes.name, planType: userRes.premiumPlan });
-        
+
         // Fetch trips using enhanced service
         const trips = await enhancedTripService.getTrips();
-        
+
         if (trips && trips.length > 0) {
           // Sort trips by status: Active first, then Upcoming, then Past
           const sortedTrips = [...trips].sort((a, b) => {
             const statusOrder = { Active: 0, Upcoming: 1, Past: 2 };
             return statusOrder[a.status] - statusOrder[b.status];
           });
-          
+
           setUpcomingTrips(sortedTrips);
-          
+
           // Set active trip to the first active trip, or first trip if none are active
-          const activeTrip = sortedTrips.find(trip => trip.status === 'Active');
+          const activeTrip = sortedTrips.find(
+            (trip) => trip.status === "Active"
+          );
           const selectedTrip = activeTrip || sortedTrips[0];
-          
+
           // Set the active trip name
           setActiveTrip(selectedTrip.name);
-          
-          
+
           // Set the active trip dates for the header
           setActiveTripDates(selectedTrip.dates);
-          
+
           // Set tripId for new expenses
           setNewExpense((prev) => ({
             ...prev,
@@ -231,7 +265,7 @@ const Dashboard = () => {
           // No trips yet
           setUpcomingTrips([]);
         }
-  
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -241,21 +275,23 @@ const Dashboard = () => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [navigate]);
 
   useEffect(() => {
     if (activeTrip && upcomingTrips && upcomingTrips.length > 0) {
-      const currentTrip = upcomingTrips.find(trip => trip.name === activeTrip);
+      const currentTrip = upcomingTrips.find(
+        (trip) => trip.name === activeTrip
+      );
       if (currentTrip) {
         // Update the active trip dates when selecting a different trip
         setActiveTripDates(currentTrip.dates);
-        
+
         // Also update the tripId for new expenses
-        setNewExpense(prev => ({
+        setNewExpense((prev) => ({
           ...prev,
-          tripId: currentTrip.id
+          tripId: currentTrip.id,
         }));
       }
     }
@@ -273,7 +309,7 @@ const Dashboard = () => {
         const currentTrip = upcomingTrips.find(
           (trip) => trip.name === activeTrip
         );
-        
+
         if (!currentTrip) {
           setLoading(false);
           return;
@@ -317,7 +353,7 @@ const Dashboard = () => {
               amount: 25,
               date: "2022-10-04",
               tripId: currentTrip.id,
-            }
+            },
           ];
         }
 
@@ -360,24 +396,23 @@ const Dashboard = () => {
       const startDate = new Date(dateRange[0]);
       const endDate = new Date(dateRange[1]);
       const today = new Date();
-      
+
       // Calculate days remaining (if trip hasn't ended)
       const daysRemaining = Math.max(
         0,
         Math.ceil((endDate - today) / (1000 * 60 * 60 * 24))
       );
-      
+
       // Calculate total days in trip
-      const totalDays = Math.ceil(
-        (endDate - startDate) / (1000 * 60 * 60 * 24)
-      ) + 1;
-      
+      const totalDays =
+        Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
       // Calculate days elapsed
       const daysElapsed = Math.max(1, totalDays - daysRemaining);
-      
+
       // Calculate total spent
       const spent = trip.budget - trip.remainingBudget;
-      
+
       // Use daily average from model if available, otherwise calculate
       const dailyAverage = trip.dailyAverage || Math.round(spent / daysElapsed);
 
@@ -481,7 +516,6 @@ const Dashboard = () => {
 
   // Function to handle logout
   const handleLogout = () => {
-    
     navigate("/login");
   };
 
@@ -495,26 +529,28 @@ const Dashboard = () => {
         ...newExpense,
         amount: parseFloat(newExpense.amount) || 0,
       };
-      
+
       let response;
       try {
         // Try to create via API
         response = await enhancedTripService.addExpense(newExpenseData);
-        
+
         // Format to match frontend structure
         response = {
-          id: response._id || response.id || (recentExpenses.length + 1),
+          id: response._id || response.id || recentExpenses.length + 1,
           category: response.category || newExpenseData.category,
           description: response.notes || newExpenseData.description,
           amount: response.amount || newExpenseData.amount,
-          date: new Date(response.date).toISOString().slice(0, 10) || newExpenseData.date,
-          tripId: response.trip || newExpenseData.tripId
+          date:
+            new Date(response.date).toISOString().slice(0, 10) ||
+            newExpenseData.date,
+          tripId: response.trip || newExpenseData.tripId,
         };
       } catch (err) {
         // Fall back to local state if API fails
         response = {
           id: recentExpenses.length + 1,
-          ...newExpenseData
+          ...newExpenseData,
         };
       }
 
@@ -535,29 +571,33 @@ const Dashboard = () => {
       // Update trip data in state
       // This would happen automatically via the Expense model post-save middleware
       // but we'll also update the UI for immediate feedback
-      const currentTrip = upcomingTrips.find((trip) => trip.name === activeTrip);
+      const currentTrip = upcomingTrips.find(
+        (trip) => trip.name === activeTrip
+      );
       if (currentTrip) {
         // Update the remaining budget
-        const updatedTrips = upcomingTrips.map(trip => {
+        const updatedTrips = upcomingTrips.map((trip) => {
           if (trip.id === currentTrip.id) {
-            const newRemainingBudget = trip.remainingBudget - newExpenseData.amount;
+            const newRemainingBudget =
+              trip.remainingBudget - newExpenseData.amount;
             const spent = trip.budget - newRemainingBudget;
-            
+
             // Calculate days elapsed for daily average
             const dateRange = trip.dates.split(" - ");
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
-            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            
+            const totalDays =
+              Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
             return {
               ...trip,
               remainingBudget: newRemainingBudget,
-              dailyAverage: spent / totalDays
+              dailyAverage: spent / totalDays,
             };
           }
           return trip;
         });
-        
+
         setUpcomingTrips(updatedTrips);
       }
 
@@ -569,6 +609,7 @@ const Dashboard = () => {
       console.error("Error adding expense:", err);
       setError("Failed to add expense. Please try again.");
     }
+    finally{}
   };
 
   // Function to handle adding a new trip
@@ -581,20 +622,25 @@ const Dashboard = () => {
         ...newTrip,
         budget: parseFloat(newTrip.budget) || 0,
       };
-      
+
       let response;
       try {
         // Try to create via API
         response = await enhancedTripService.addTrip(newTripData);
-        
+
         // Format to match frontend structure
         response = {
-          id: response._id || response.id || (upcomingTrips.length + 1),
+          id: response._id || response.id || upcomingTrips.length + 1,
           name: response.tripName || newTripData.name,
-          dates: `${new Date(response.startDate).toISOString().slice(0, 10)} - ${new Date(response.endDate).toISOString().slice(0, 10)}` || newTripData.dates,
+          dates:
+            `${new Date(response.startDate)
+              .toISOString()
+              .slice(0, 10)} - ${new Date(response.endDate)
+              .toISOString()
+              .slice(0, 10)}` || newTripData.dates,
           budget: response.totalBudget || newTripData.budget,
           remainingBudget: response.remainingBudget || newTripData.budget,
-          status: response.name || 'upcoming'
+          status: response.name || "upcoming",
         };
       } catch (err) {
         // Fall back to local state if API fails
@@ -602,7 +648,7 @@ const Dashboard = () => {
           id: upcomingTrips.length + 1,
           ...newTripData,
           remainingBudget: newTripData.budget,
-          status: 'upcoming'
+          status: "upcoming",
         };
       }
 
@@ -624,11 +670,161 @@ const Dashboard = () => {
     }
   };
 
-  // Function to handle deleting an expense
-  const handleDeleteExpense = async (index) => {
+  // Function to handle deleting a trip
+  const handleDeleteTrip = async (tripId) => {
     try {
+      // Confirm deletion
+      if (
+        !window.confirm(
+          "Are you sure you want to delete this trip? All associated expenses will also be deleted."
+        )
+      ) {
+        return;
+      }
+
+      // Delete via API
+      try {
+        await enhancedTripService.deleteTrip(tripId);
+      } catch (err) {
+        console.warn("API delete failed, updating UI only:", err);
+      }
+
+      // Update local state
+      const updatedTrips = upcomingTrips.filter((trip) => trip.id !== tripId);
+      setUpcomingTrips(updatedTrips);
+
+      // If the active trip was deleted, set a new active trip
+      const deletedTrip = upcomingTrips.find((trip) => trip.id === tripId);
+      if (deletedTrip && deletedTrip.name === activeTrip) {
+        if (updatedTrips.length > 0) {
+          setActiveTrip(updatedTrips[0].name);
+        } else {
+          setActiveTrip("");
+        }
+      }
+    } catch (err) {
+      console.error("Error deleting trip:", err);
+      setError("Failed to delete trip. Please try again.");
+    }
+  };
+
+  const handleEditExpense = (expense) => {
+    setEditingExpense({
+      id: expense.id,
+      category: expense.category,
+      description: expense.description,
+      amount: expense.amount.toString(),
+      date: expense.date,
+      tripId: expense.tripId,
+    });
+    setShowEditExpenseModal(true);
+  };
+
+  // Add this function to your Dashboard component
+  const handleUpdateExpense = async (e) => {
+    e.preventDefault();
+
+    try {
+      const originalExpense = recentExpenses.find(
+        (expense) => expense.id === editingExpense.id
+      );
+      const oldAmount = parseFloat(originalExpense.amount);
+      const newAmount = parseFloat(editingExpense.amount);
+      const amountDifference = newAmount - oldAmount;
+
+      // Update via API
+      try {
+        await enhancedTripService.updateExpense(
+          editingExpense.id,
+          editingExpense
+        );
+      } catch (err) {
+        console.warn("API update failed, updating UI only:", err);
+      }
+
+      // Update local state
+      const updatedExpenses = recentExpenses.map((expense) =>
+        expense.id === editingExpense.id
+          ? {
+              ...editingExpense,
+              amount: parseFloat(editingExpense.amount),
+            }
+          : expense
+      );
+
+      setRecentExpenses(updatedExpenses);
+
+      // Update trip budget
+      const currentTrip = upcomingTrips.find(
+        (trip) => trip.name === activeTrip
+      );
+      if (currentTrip) {
+        const updatedTrips = upcomingTrips.map((trip) => {
+          if (trip.id === currentTrip.id) {
+            const newRemainingBudget = trip.remainingBudget - amountDifference;
+            return { ...trip, remainingBudget: newRemainingBudget };
+          }
+          return trip;
+        });
+
+        setUpcomingTrips(updatedTrips);
+      }
+
+      // Update charts
+      generatePieChartData(updatedExpenses);
+      generateBarChartData(updatedExpenses, currentTrip);
+
+      // Close modal and reset editing state
+      setShowEditExpenseModal(false);
+      setEditingExpense(null);
+    } catch (err) {
+      console.error("Error updating expense:", err);
+      setError("Failed to update expense. Please try again.");
+    }
+  };
+
+  // Add this function to your Dashboard component
+  const handleViewAllExpenses = async (tripId) => {
+    try {
+      setLoading(true);
+
+      // Find the trip with the given ID
+      const trip = upcomingTrips.find((trip) => trip.id === tripId);
+      if (trip) {
+        setActiveTrip(trip.name);
+
+        // Fetch expenses for this trip
+        const expenses = await enhancedTripService.getExpenses(tripId);
+        setRecentExpenses(expenses);
+
+        // Update charts
+        generatePieChartData(expenses);
+        generateBarChartData(expenses, trip);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching all expenses:", err);
+      setError("Failed to load all expenses. Please try again.");
+      setLoading(false);
+    }
+  };
+
+  // Function to handle deleting an expense
+  const handleDeleteExpense = async (expenseToDelete) => {
+    const {id} = expenseToDelete;
+    try {
+     
+      const index = recentExpenses.findIndex(exp => exp.id === id);
+    
+    if (index === -1) {
+      console.error("Expense not found in array");
+      return;
+    }
+    console.log(index);
+
       const expenseToDelete = recentExpenses[index];
-      
+       
       try {
         // Try to delete via API
         await enhancedTripService.deleteExpense(expenseToDelete.id);
@@ -645,29 +841,33 @@ const Dashboard = () => {
       // Update trip data in state
       // This would happen automatically via the Expense model middleware
       // but we'll also update the UI for immediate feedback
-      const currentTrip = upcomingTrips.find((trip) => trip.name === activeTrip);
+      const currentTrip = upcomingTrips.find(
+        (trip) => trip.name === activeTrip
+      );
       if (currentTrip) {
         // Update the remaining budget
-        const updatedTrips = upcomingTrips.map(trip => {
+        const updatedTrips = upcomingTrips.map((trip) => {
           if (trip.id === currentTrip.id) {
-            const newRemainingBudget = trip.remainingBudget + parseFloat(expenseToDelete.amount);
+            const newRemainingBudget =
+              trip.remainingBudget + parseFloat(expenseToDelete.amount);
             const spent = trip.budget - newRemainingBudget;
-            
+
             // Calculate days elapsed for daily average
             const dateRange = trip.dates.split(" - ");
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
-            const totalDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-            
+            const totalDays =
+              Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
             return {
               ...trip,
               remainingBudget: newRemainingBudget,
-              dailyAverage: spent / totalDays
+              dailyAverage: spent / totalDays,
             };
           }
           return trip;
         });
-        
+
         setUpcomingTrips(updatedTrips);
       }
 
@@ -701,16 +901,18 @@ const Dashboard = () => {
         setShowAddTripModal={setShowAddTripModal}
         user={user}
         handleLogout={handleLogout}
+        handleDeleteTrip={handleDeleteTrip}
+        handleViewAllExpenses={handleViewAllExpenses}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header
-            activeTrip={activeTrip}
-            activeTripDates={activeTripDates}
-            setShowAddExpenseModal={setShowAddExpenseModal}
-            user={user}
-            upcomingTrips={upcomingTrips}
-            currentTripData={currentTripData}
+          activeTrip={activeTrip}
+          activeTripDates={activeTripDates}
+          setShowAddExpenseModal={setShowAddExpenseModal}
+          user={user}
+          upcomingTrips={upcomingTrips}
+          currentTripData={currentTripData}
         />
 
         <main className="flex-1 overflow-y-auto p-6">
@@ -734,7 +936,7 @@ const Dashboard = () => {
                     text: `$${currentTripData.remainingBudget.toLocaleString()} remaining`,
                     className: "text-sm text-gray-500",
                   }}
-                  icon={<IndianRupee  className="text-green-500" />}
+                  icon={<IndianRupee className="text-green-500" />}
                 />
                 <BudgetCard
                   title="Spent So Far"
@@ -783,6 +985,12 @@ const Dashboard = () => {
                 recentExpenses={recentExpenses}
                 getCategoryIcon={getCategoryIcon}
                 handleDeleteExpense={handleDeleteExpense}
+                handleEditExpense={handleEditExpense}
+                emptyState={
+                  <div className="text-center py-8 text-gray-500">
+                    No expenses recorded for this trip yet.
+                  </div>
+                }
               />
             </>
           ) : (
@@ -811,6 +1019,11 @@ const Dashboard = () => {
         newExpense={newExpense}
         setNewExpense={setNewExpense}
         handleAddExpense={handleAddExpense}
+        showEditExpenseModal={showEditExpenseModal}
+        setShowEditExpenseModal={setShowEditExpenseModal}
+        editingExpense={editingExpense}
+        setEditingExpense={setEditingExpense}
+        handleUpdateExpense={handleUpdateExpense}
       />
 
       <TripModal

@@ -13,6 +13,7 @@ import {
   X,
   Trash2,
   IndianRupee,
+  FileText
 } from "lucide-react";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -26,6 +27,7 @@ const Sidebar = ({
   setShowAddTripModal,
   user,
   handleDeleteTrip,
+  handleViewAllExpenses
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -125,6 +127,15 @@ const Sidebar = ({
               </button>
             ))}
             
+            {/* View All Expenses Button */}
+            <button
+              onClick={handleViewAllExpenses}
+              className={`w-full flex items-center px-4 py-3 rounded-lg text-indigo-100 hover:bg-indigo-700`}
+            >
+              <FileText size={20} />
+              {isSidebarOpen && <span className="ml-3">All Expenses</span>}
+            </button>
+            
             {/* Currency Converter Button */}
             <button
               onClick={() => setShowCurrencyConverter(!showCurrencyConverter)}
@@ -202,34 +213,40 @@ const Sidebar = ({
                 My Trips
               </h2>
               <div className="mt-2 space-y-1">
-                {upcomingTrips.map((trip) => (
-                  <div
-                    key={trip.id || trip.name}
-                    className={`flex items-center justify-between px-4 py-2 text-sm rounded-lg ${
-                      trip.name === activeTrip
-                        ? "bg-indigo-600 text-white"
-                        : "text-indigo-100 hover:bg-indigo-700"
-                    }`}
-                  >
-                    <button
-                      className="text-left truncate flex-grow"
-                      onClick={() => setActiveTrip(trip.name)}
+                {upcomingTrips && upcomingTrips.length > 0 ? (
+                  upcomingTrips.map((trip) => (
+                    <div
+                      key={trip.id || trip.name}
+                      className={`flex items-center justify-between px-4 py-2 text-sm rounded-lg ${
+                        trip.name === activeTrip
+                          ? "bg-indigo-600 text-white"
+                          : "text-indigo-100 hover:bg-indigo-700"
+                      }`}
                     >
-                      <span>{trip.name}</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (window.confirm(`Are you sure you want to delete "${trip.name}"?`)) {
-                          handleDeleteTrip(trip.id || trip.name);
-                        }
-                      }}
-                      className="ml-2 text-indigo-300 hover:text-red-300"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                      <button
+                        className="text-left truncate flex-grow"
+                        onClick={() => setActiveTrip(trip.name)}
+                      >
+                        <span>{trip.name}</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(`Are you sure you want to delete "${trip.name}"?`)) {
+                            handleDeleteTrip(trip.id || trip.name);
+                          }
+                        }}
+                        className="ml-2 text-indigo-300 hover:text-red-300"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-sm text-indigo-300">
+                    No trips added yet
                   </div>
-                ))}
+                )}
 
                 <button
                   className="w-full flex items-center px-4 py-2 mt-1 text-sm text-indigo-100 hover:bg-indigo-700 rounded-lg"

@@ -4,6 +4,8 @@ import AuthPage from "./components/AuthPage";
 import TravelBudgetDashboard from "./components/TravelBudgetDashboard";
 import Dashboard from "./pages/Dashboard";
 import HomePage from "./components/HomePage";
+import Expenses from "./pages/Expenses";
+import TripPlanner from "./pages/TripPlanner";
 
 // Auth checker component to monitor token status
 const AuthChecker = ({ children }) => {
@@ -56,6 +58,16 @@ function App() {
           <Route path="/dashboard1" element={
             <ProtectedRoute>
               <TravelBudgetDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/expenses" element={
+            <ProtectedRoute>
+              <Expenses />
+            </ProtectedRoute>
+          } />
+          <Route path="/trip-planner" element={
+            <ProtectedRoute>
+              <TripPlanner />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />
