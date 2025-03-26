@@ -115,7 +115,7 @@ export const enhancedTripService = {
       // This would be an API call to create an expense in the Expense model
       const response = await expenseService.createExpense(formattedData);
       console.log(response);
-      return await response.json();
+      return response;
     } catch (error) {
       console.error("Error adding expense:", error);
       throw error;
@@ -174,7 +174,7 @@ export const enhancedTripService = {
       const response = await tripService.createTrip(formattedData);
       console.log(response);
 
-      return await response.json();
+      return response;
     } catch (error) {
       console.error("Error adding trip:", error);
       throw error;
@@ -301,53 +301,76 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchExpenses = async () => {
       if (!activeTrip) return;
-
+  
       try {
         setLoading(true);
-
-        // Find the trip ID based on the active trip name
-        const currentTrip = upcomingTrips.find(
+  
+        // First, try to find the trip in upcomingTrips
+        let currentTrip = upcomingTrips.find(
           (trip) => trip.name === activeTrip
         );
-
+  
+        // If no trip found in upcomingTrips, try fetching trips again
         if (!currentTrip) {
+          try {
+            const trips = await enhancedTripService.getTrips();
+            
+            // Update upcomingTrips state
+            setUpcomingTrips(trips);
+  
+            // Find the current trip from newly fetched trips
+            currentTrip = trips.find((trip) => trip.name === activeTrip);
+          } catch (fetchError) {
+            console.error("Error refetching trips:", fetchError);
+            setError("Unable to load trips. Please refresh the page.");
+            setLoading(false);
+            return;
+          }
+        }
+  
+        // If still no trip found, handle gracefully
+        if (!currentTrip) {
+          setError("No active trip found. Please create a trip first.");
           setLoading(false);
           return;
         }
-
+  
         // Fetch expenses for the current trip
         let expenses;
         try {
           expenses = await enhancedTripService.getExpenses(currentTrip.id);
         } catch (err) {
-          // Fall back to mock data if API is not available
-         [];
+          // Fall back to empty array if API fails
+          expenses = [];
         }
-
+  
         setRecentExpenses(expenses);
-
+  
         // Update new expense form with current trip ID
         setNewExpense((prev) => ({
           ...prev,
           tripId: currentTrip.id,
         }));
-
-        // Generate pie chart data from expenses
-        generatePieChartData(expenses);
-
-        // Generate bar chart data from expenses
-        generateBarChartData(expenses, currentTrip);
-
+  
+        // Only generate chart data if expenses exist
+        if (expenses.length > 0) {
+          generatePieChartData(expenses);
+          generateBarChartData(expenses, currentTrip);
+        } else {
+          // Optional: Clear previous chart data if no expenses
+          generatePieChartData([]);
+          generateBarChartData([], currentTrip);
+        }
+  
         setLoading(false);
       } catch (err) {
         console.error("Error fetching expenses:", err);
-        setError(
-          "Failed to load expenses for this trip. Please try again later."
-        );
+        setError("Failed to load expenses for this trip. Please try again later.");
+        setRecentExpenses([]); // Ensure expenses are set to empty array
         setLoading(false);
       }
     };
-
+  
     fetchExpenses();
   }, [activeTrip, upcomingTrips]);
 
@@ -489,42 +512,81 @@ const Dashboard = () => {
   // Function to handle adding a new expense
   const handleAddExpense = async (e) => {
     e.preventDefault();
-
+  
     try {
+      // Validate input
+      if (!newExpense.tripId) {
+        setError("No active trip selected. Please create a trip first.");
+        
+        // Clear error after 5 seconds
+        setTimeout(() => {
+          setError(null);
+        }, 5000);
+        
+        return;
+      }
+  
+      // Validate amount
+      const amount = parseFloat(newExpense.amount);
+      if (isNaN(amount) || amount <= 0) {
+        setError("Please enter a valid expense amount.");
+        
+        // Clear error after 5 seconds
+        setTimeout(() => {
+          setError(null);
+        }, 5000);
+        
+        return;
+      }
+  
       // Create a new expense using the enhanced service
       const newExpenseData = {
         ...newExpense,
-        amount: parseFloat(newExpense.amount) || 0,
+        amount: amount,
       };
-
+  
       let response;
       try {
         // Try to create via API
         response = await enhancedTripService.addExpense(newExpenseData);
-
+  
+        // Ensure response is valid
+        if (!response) {
+          throw new Error("No response received from server");
+        }
+  
         // Format to match frontend structure
         response = {
-          id: response._id || response.id || recentExpenses.length + 1,
-          category: response.category || newExpenseData.category,
-          description: response.notes || newExpenseData.description,
-          amount: response.amount || newExpenseData.amount,
-          date:
-            new Date(response.date).toISOString().slice(0, 10) ||
-            newExpenseData.date,
-          tripId: response.trip || newExpenseData.tripId,
+          id: response.data._id || response.id || recentExpenses.length + 1,
+          category: response.data.category || newExpenseData.category,
+          description: response.data.notes || newExpenseData.description,
+          amount: response.data.amount,
+          date: new Date(response.data.date || newExpenseData.date).toISOString().slice(0, 10),
+          tripId: response.data.trip || newExpenseData.tripId,
         };
-      } catch (err) {
+      } catch (apiError) {
+        console.error("API Error adding expense:", apiError);
+  
         // Fall back to local state if API fails
         response = {
           id: recentExpenses.length + 1,
           ...newExpenseData,
+          date: newExpenseData.date,
         };
+  
+        // Show a more descriptive error
+        setError(`Failed to add expense: ${apiError.message}. Changes may not be saved.`);
+        
+        // Clear error after 5 seconds
+        setTimeout(() => {
+          setError(null);
+        }, 5000);
       }
-
+  
       // Add to local state
       const updatedExpenses = [...recentExpenses, response];
       setRecentExpenses(updatedExpenses);
-
+  
       // Clear form and close modal
       setNewExpense({
         category: "Food",
@@ -534,28 +596,27 @@ const Dashboard = () => {
         tripId: newExpenseData.tripId,
       });
       setShowAddExpenseModal(false);
-
+  
       // Update trip data in state
-      // This would happen automatically via the Expense model post-save middleware
-      // but we'll also update the UI for immediate feedback
       const currentTrip = upcomingTrips.find(
         (trip) => trip.name === activeTrip
       );
+  
       if (currentTrip) {
         // Update the remaining budget
         const updatedTrips = upcomingTrips.map((trip) => {
           if (trip.id === currentTrip.id) {
             const newRemainingBudget =
-              trip.remainingBudget - newExpenseData.amount;
+              trip.remainingBudget - response.amount;
             const spent = trip.budget - newRemainingBudget;
-
+  
             // Calculate days elapsed for daily average
             const dateRange = trip.dates.split(" - ");
             const startDate = new Date(dateRange[0]);
             const endDate = new Date(dateRange[1]);
             const totalDays =
               Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-
+  
             return {
               ...trip,
               remainingBudget: newRemainingBudget,
@@ -564,19 +625,23 @@ const Dashboard = () => {
           }
           return trip;
         });
-
+  
         setUpcomingTrips(updatedTrips);
       }
-
+  
       // Update charts
-      const trip = upcomingTrips.find((trip) => trip.name === activeTrip);
       generatePieChartData(updatedExpenses);
-      generateBarChartData(updatedExpenses, trip);
+      generateBarChartData(updatedExpenses, currentTrip);
+  
     } catch (err) {
-      console.error("Error adding expense:", err);
-      setError("Failed to add expense. Please try again.");
+      console.error("Unexpected error adding expense:", err);
+      setError("An unexpected error occurred. Please try again.");
+      
+      // Clear error after 5 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
     }
-    finally{}
   };
 
   // Function to handle adding a new trip
@@ -873,6 +938,8 @@ const Dashboard = () => {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Only render Header if there are trips */}
+      {upcomingTrips.length > 0 && (
         <Header
           activeTrip={activeTrip}
           activeTripDates={activeTripDates}
@@ -881,6 +948,7 @@ const Dashboard = () => {
           upcomingTrips={upcomingTrips}
           currentTripData={currentTripData}
         />
+      )}
 
         <main className="flex-1 overflow-y-auto p-6">
           {error && (
