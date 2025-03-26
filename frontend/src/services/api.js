@@ -3,7 +3,7 @@ import axios from 'axios';
 // Create axios instance
 const api = axios.create({
   baseURL: 'https://travel-budget-j7jp.onrender.com',
-  timeout: 10000,
+  timeout: 20000,
   headers: {
     'Content-Type': 'application/json'
   }
