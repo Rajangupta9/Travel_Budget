@@ -316,8 +316,13 @@ const Dashboard = () => {
         }
 
         // Fetch expenses for the current trip
-      
-          let expenses = await enhancedTripService.getExpenses(currentTrip.id);
+        let expenses;
+        try {
+          expenses = await enhancedTripService.getExpenses(currentTrip.id);
+        } catch (err) {
+          // Fall back to mock data if API is not available
+         [];
+        }
 
         setRecentExpenses(expenses);
 
