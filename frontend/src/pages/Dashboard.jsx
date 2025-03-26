@@ -316,46 +316,8 @@ const Dashboard = () => {
         }
 
         // Fetch expenses for the current trip
-        let expenses;
-        try {
-          expenses = await enhancedTripService.getExpenses(currentTrip.id);
-        } catch (err) {
-          // Fall back to mock data if API is not available
-          expenses = [
-            {
-              id: 1,
-              category: "Food",
-              description: "Sushi",
-              amount: 50,
-              date: "2022-10-02",
-              tripId: currentTrip.id,
-            },
-            {
-              id: 2,
-              category: "Transport",
-              description: "Train ticket",
-              amount: 30,
-              date: "2022-10-03",
-              tripId: currentTrip.id,
-            },
-            {
-              id: 3,
-              category: "Accommodation",
-              description: "Hotel in Tokyo",
-              amount: 120,
-              date: "2022-10-01",
-              tripId: currentTrip.id,
-            },
-            {
-              id: 4,
-              category: "Activities",
-              description: "Museum tickets",
-              amount: 25,
-              date: "2022-10-04",
-              tripId: currentTrip.id,
-            },
-          ];
-        }
+      
+          let expenses = await enhancedTripService.getExpenses(currentTrip.id);
 
         setRecentExpenses(expenses);
 
