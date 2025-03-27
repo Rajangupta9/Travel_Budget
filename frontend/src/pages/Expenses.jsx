@@ -171,22 +171,67 @@ const Expenses = () => {
   const handleAddExpense = async (e) => {
     e.preventDefault();
 
+    // Validate input fields
+    const validateExpense = () => {
+      const errors = {};
+
+      // Check category
+      if (!newExpense.category) {
+        errors.category = "Category is required";
+      }
+
+      // Check description
+      if (!newExpense.description.trim()) {
+        errors.description = "Description cannot be empty";
+      }
+
+      // Check amount
+      const amount = parseFloat(newExpense.amount);
+      if (isNaN(amount) || amount <= 0) {
+        errors.amount = "Please enter a valid positive amount";
+      }
+
+      // Check date
+      const expenseDate = new Date(newExpense.date);
+      if (isNaN(expenseDate.getTime())) {
+        errors.date = "Invalid date selected";
+      }
+
+      return errors;
+    };
+
+    const validationErrors = validateExpense();
+    if (Object.keys(validationErrors).length > 0) {
+      // Show validation errors (you might want to update state to display these)
+      console.error("Validation Errors:", validationErrors);
+      return;
+    }
+
     try {
+      // Ensure date is a valid Date object
+      const sanitizedDate = new Date(newExpense.date);
+      
       // Create a new expense using the enhanced service
       const newExpenseData = {
         ...newExpense,
         amount: parseFloat(newExpense.amount) || 0,
+        date: sanitizedDate.toISOString(), // Use toISOString to ensure valid date format
       };
+
+      // Add additional client-side validations
+      if (!newExpenseData.tripId) {
+        throw new Error("No trip selected for this expense");
+      }
 
       const response = await enhancedTripService.addExpense(newExpenseData);
       
-      // Format response for frontend
+      // Robust response handling
       const formattedExpense = {
-        id: response._id || response.id || expenses.length + 1,
+        id: response._id || response.id || crypto.randomUUID(), // Use crypto.randomUUID for more reliable ID generation
         category: response.category || newExpenseData.category,
         description: response.notes || newExpenseData.description,
-        amount: response.amount || newExpenseData.amount,
-        date: new Date(response.date).toISOString().slice(0, 10) || newExpenseData.date,
+        amount: parseFloat(response.amount || newExpenseData.amount).toFixed(2), // Ensure two decimal places
+        date: new Date(response.date || sanitizedDate).toISOString().slice(0, 10),
         tripId: response.trip || newExpenseData.tripId,
       };
 
@@ -207,9 +252,24 @@ const Expenses = () => {
       });
       
       setShowAddExpenseModal(false);
+
+      // Optional: Show a success toast or notification
+      // You can implement a toast notification system if desired
+      console.log("Expense added successfully!");
+
     } catch (err) {
       console.error("Error adding expense:", err);
-      setError("Failed to add expense. Please try again.");
+      
+      // More informative error handling
+      const errorMessage = err.response?.data?.message || 
+        err.message || 
+        "Failed to add expense. Please try again.";
+      
+      // Set error state to display to user
+      setError(errorMessage);
+
+      // Optional: Add error logging or reporting mechanism
+      // You might want to integrate with an error tracking service
     }
   };
 
