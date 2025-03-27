@@ -128,13 +128,13 @@ const Sidebar = ({
             ))}
             
             {/* View All Expenses Button */}
-            <button
+            {/* <button
               onClick={handleViewAllExpenses}
               className={`w-full flex items-center px-4 py-3 rounded-lg text-indigo-100 hover:bg-indigo-700`}
             >
               <FileText size={20} />
               {isSidebarOpen && <span className="ml-3">All Expenses</span>}
-            </button>
+            </button> */}
             
             {/* Currency Converter Button */}
             <button
