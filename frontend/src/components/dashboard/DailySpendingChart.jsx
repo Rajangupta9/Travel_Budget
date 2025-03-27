@@ -11,7 +11,10 @@ import {
   ReferenceLine,
 } from "recharts";
 
-const DailySpendingChart = ({ barData = [], title = "Daily Spending" }) => {
+const DailySpendingChart = ({ barData = [], title = "Daily Spending",
+           activeTrip,
+          setShowAddExpenseModal,
+ }) => {
   const [activeBar, setActiveBar] = useState(null);
   
   // Calculate totals for the summary
@@ -138,7 +141,11 @@ const DailySpendingChart = ({ barData = [], title = "Daily Spending" }) => {
           <div className="h-full flex items-center justify-center">
             <div className="text-center">
               <p className="text-gray-500 mb-2">No spending data to display</p>
-              <button className="text-sm text-purple-600 hover:text-purple-800">
+              <button
+                  className="px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors disabled:bg-indigo-300 disabled:cursor-not-allowed flex items-center shadow-sm"
+                  onClick={() => activeTrip && setShowAddExpenseModal(true)}
+                  disabled={!activeTrip}
+                >
                 Add your first expense
               </button>
             </div>

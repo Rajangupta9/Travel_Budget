@@ -1017,6 +1017,10 @@ const Dashboard = () => {
               </div>
 
               <ExpenseTable
+               
+                activeTrip={activeTrip}
+                activeTripDates={activeTripDates}
+                setShowAddExpenseModal={setShowAddExpenseModal}
                 recentExpenses={recentExpenses}
                 getCategoryIcon={getCategoryIcon}
                 handleDeleteExpense={handleDeleteExpense}

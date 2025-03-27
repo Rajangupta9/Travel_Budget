@@ -11,20 +11,21 @@ import ExpenseModal from "../components/modals/ExpenseModel";
 import { getProfile } from "../controllers/authController";
 import { getCategoryIcon } from "../utils/categoryIcons";
 
-const Expenses = () => {
+const Expenses = ({
+  activeTrip, 
+  setShowAddExpenseModal
+}) => {
   // Router hooks
   const navigate = useNavigate();
   const { tripId } = useParams();
 
   // State management
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTrip, setActiveTrip] = useState("");
   const [activeTripDates, setActiveTripDates] = useState(null);
   const [activeTripId, setActiveTripId] = useState(tripId || "");
   const [upcomingTrips, setUpcomingTrips] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [filteredExpenses, setFilteredExpenses] = useState([]);
-  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [showEditExpenseModal, setShowEditExpenseModal] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [newExpense, setNewExpense] = useState({
@@ -56,15 +57,14 @@ const Expenses = () => {
         try {
           const userRes = await getProfile();
           setUser({ name: userRes.name, planType: userRes.premiumPlan });
-          
+
           // Then fetch any other data you need for this page
           // ...
         } catch (err) {
           console.error("Error fetching user data:", err);
           setError("Failed to load user data. Please try again later.");
         }
-      
-       
+
         // Fetch trips using enhanced service
         const trips = await enhancedTripService.getTrips();
 
@@ -79,14 +79,16 @@ const Expenses = () => {
 
           // Set active trip based on URL param or default to first active trip
           let selectedTrip;
-          
+
           if (tripId) {
             selectedTrip = sortedTrips.find((trip) => trip.id === tripId);
           }
-          
+
           if (!selectedTrip) {
             // Use first active trip or first trip
-            selectedTrip = sortedTrips.find((trip) => trip.status === "Active") || sortedTrips[0];
+            selectedTrip =
+              sortedTrips.find((trip) => trip.status === "Active") ||
+              sortedTrips[0];
           }
 
           setActiveTripId(selectedTrip.id);
@@ -100,7 +102,9 @@ const Expenses = () => {
           }));
 
           // Fetch expenses for this trip
-          const tripExpenses = await enhancedTripService.getExpenses(selectedTrip.id);
+          const tripExpenses = await enhancedTripService.getExpenses(
+            selectedTrip.id
+          );
           setExpenses(tripExpenses);
           setFilteredExpenses(tripExpenses);
         }
@@ -129,26 +133,26 @@ const Expenses = () => {
   // Function to handle changing active trip
   const handleChangeTrip = async (tripName) => {
     const trip = upcomingTrips.find((trip) => trip.name === tripName);
-    
+
     if (trip) {
       setActiveTrip(tripName);
       setActiveTripId(trip.id);
       setActiveTripDates(trip.dates);
-      
+
       try {
         setLoading(true);
-        
+
         // Fetch expenses for this trip
         const tripExpenses = await enhancedTripService.getExpenses(trip.id);
         setExpenses(tripExpenses);
         setFilteredExpenses(tripExpenses);
-        
+
         // Update new expense form
         setNewExpense((prev) => ({
           ...prev,
           tripId: trip.id,
         }));
-        
+
         // Reset filters
         setFilters({
           category: "All",
@@ -157,7 +161,7 @@ const Expenses = () => {
           amountMin: "",
           amountMax: "",
         });
-        
+
         setLoading(false);
       } catch (err) {
         console.error("Error fetching expenses:", err);
@@ -210,7 +214,7 @@ const Expenses = () => {
     try {
       // Ensure date is a valid Date object
       const sanitizedDate = new Date(newExpense.date);
-      
+
       // Create a new expense using the enhanced service
       const newExpenseData = {
         ...newExpense,
@@ -224,21 +228,23 @@ const Expenses = () => {
       }
 
       const response = await enhancedTripService.addExpense(newExpenseData);
-      
+
       // Robust response handling
       const formattedExpense = {
         id: response._id || response.id || crypto.randomUUID(), // Use crypto.randomUUID for more reliable ID generation
         category: response.category || newExpenseData.category,
         description: response.notes || newExpenseData.description,
         amount: parseFloat(response.amount || newExpenseData.amount).toFixed(2), // Ensure two decimal places
-        date: new Date(response.date || sanitizedDate).toISOString().slice(0, 10),
+        date: new Date(response.date || sanitizedDate)
+          .toISOString()
+          .slice(0, 10),
         tripId: response.trip || newExpenseData.tripId,
       };
 
       // Add to local state
       const updatedExpenses = [...expenses, formattedExpense];
       setExpenses(updatedExpenses);
-      
+
       // Apply current filters to updated expenses
       applyFilters(updatedExpenses);
 
@@ -250,21 +256,21 @@ const Expenses = () => {
         date: new Date().toISOString().slice(0, 10),
         tripId: newExpenseData.tripId,
       });
-      
+
       setShowAddExpenseModal(false);
 
       // Optional: Show a success toast or notification
       // You can implement a toast notification system if desired
       console.log("Expense added successfully!");
-
     } catch (err) {
       console.error("Error adding expense:", err);
-      
+
       // More informative error handling
-      const errorMessage = err.response?.data?.message || 
-        err.message || 
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
         "Failed to add expense. Please try again.";
-      
+
       // Set error state to display to user
       setError(errorMessage);
 
@@ -292,7 +298,10 @@ const Expenses = () => {
 
     try {
       // Update via API
-      await enhancedTripService.updateExpense(editingExpense.id, editingExpense);
+      await enhancedTripService.updateExpense(
+        editingExpense.id,
+        editingExpense
+      );
 
       // Update local state
       const updatedExpenses = expenses.map((expense) =>
@@ -305,7 +314,7 @@ const Expenses = () => {
       );
 
       setExpenses(updatedExpenses);
-      
+
       // Apply current filters to updated expenses
       applyFilters(updatedExpenses);
 
@@ -325,9 +334,11 @@ const Expenses = () => {
       await enhancedTripService.deleteExpense(expenseToDelete.id);
 
       // Update local state
-      const updatedExpenses = expenses.filter((expense) => expense.id !== expenseToDelete.id);
+      const updatedExpenses = expenses.filter(
+        (expense) => expense.id !== expenseToDelete.id
+      );
       setExpenses(updatedExpenses);
-      
+
       // Apply current filters to updated expenses
       applyFilters(updatedExpenses);
     } catch (err) {
@@ -339,30 +350,36 @@ const Expenses = () => {
   // Function to apply filters to expenses
   const applyFilters = (expensesToFilter = expenses) => {
     let filtered = [...expensesToFilter];
-    
+
     // Filter by category
     if (filters.category !== "All") {
-      filtered = filtered.filter((expense) => expense.category === filters.category);
+      filtered = filtered.filter(
+        (expense) => expense.category === filters.category
+      );
     }
-    
+
     // Filter by date range
     if (filters.dateFrom) {
       filtered = filtered.filter((expense) => expense.date >= filters.dateFrom);
     }
-    
+
     if (filters.dateTo) {
       filtered = filtered.filter((expense) => expense.date <= filters.dateTo);
     }
-    
+
     // Filter by amount range
     if (filters.amountMin) {
-      filtered = filtered.filter((expense) => parseFloat(expense.amount) >= parseFloat(filters.amountMin));
+      filtered = filtered.filter(
+        (expense) => parseFloat(expense.amount) >= parseFloat(filters.amountMin)
+      );
     }
-    
+
     if (filters.amountMax) {
-      filtered = filtered.filter((expense) => parseFloat(expense.amount) <= parseFloat(filters.amountMax));
+      filtered = filtered.filter(
+        (expense) => parseFloat(expense.amount) <= parseFloat(filters.amountMax)
+      );
     }
-    
+
     setFilteredExpenses(filtered);
   };
 
@@ -385,16 +402,16 @@ const Expenses = () => {
     const headers = ["Category", "Description", "Amount", "Date"];
     const csvData = [
       headers.join(","),
-      ...filteredExpenses.map((expense) => 
+      ...filteredExpenses.map((expense) =>
         [
           expense.category,
           `"${expense.description.replace(/"/g, '""')}"`,
           expense.amount,
-          expense.date
+          expense.date,
         ].join(",")
-      )
+      ),
     ].join("\n");
-    
+
     const blob = new Blob([csvData], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -465,21 +482,26 @@ const Expenses = () => {
                   <Download size={20} />
                 </button>
                 <button
-                  className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center"
-                  onClick={() => setShowAddExpenseModal(true)}
+                  className="px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors disabled:bg-indigo-300 disabled:cursor-not-allowed flex items-center shadow-sm"
+                  onClick={() => activeTrip && setShowAddExpenseModal(true)}
+                  disabled={!activeTrip}
                 >
                   <Plus size={16} className="mr-1" />
-                  Add Expense
+                  <span>Add Expense</span>
                 </button>
               </div>
             </div>
 
             {showFilters && (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">Filters</h3>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">
+                  Filters
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">Category</label>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      Category
+                    </label>
                     <select
                       name="category"
                       value={filters.category}
@@ -496,7 +518,9 @@ const Expenses = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">From Date</label>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      From Date
+                    </label>
                     <input
                       type="date"
                       name="dateFrom"
@@ -506,7 +530,9 @@ const Expenses = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-600 mb-1">To Date</label>
+                    <label className="block text-sm text-gray-600 mb-1">
+                      To Date
+                    </label>
                     <input
                       type="date"
                       name="dateTo"
@@ -517,7 +543,9 @@ const Expenses = () => {
                   </div>
                   <div className="flex space-x-2">
                     <div className="flex-1">
-                      <label className="block text-sm text-gray-600 mb-1">Min $</label>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        Min $
+                      </label>
                       <input
                         type="number"
                         name="amountMin"
@@ -527,7 +555,9 @@ const Expenses = () => {
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-sm text-gray-600 mb-1">Max $</label>
+                      <label className="block text-sm text-gray-600 mb-1">
+                        Max $
+                      </label>
                       <input
                         type="number"
                         name="amountMax"
@@ -548,8 +578,11 @@ const Expenses = () => {
               handleEditExpense={handleEditExpense}
               emptyState={
                 <div className="text-center py-8 text-gray-500">
-                  {filters.category !== "All" || filters.dateFrom || filters.dateTo || 
-                   filters.amountMin || filters.amountMax
+                  {filters.category !== "All" ||
+                  filters.dateFrom ||
+                  filters.dateTo ||
+                  filters.amountMin ||
+                  filters.amountMax
                     ? "No expenses match your filters."
                     : "No expenses recorded for this trip yet."}
                 </div>

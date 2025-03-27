@@ -8,11 +8,15 @@ import {
   Legend,
   Sector
 } from "recharts";
+import { Plus } from "lucide-react";
 
 const ExpenseChart = ({ 
+  activeTrip, 
+  setShowAddExpenseModal,
   pieData = [], 
   title = "Expenses by Category",
-  currency = "$" 
+  currency = "$",
+  firstTimeNoExpenses = true // New prop to control first-time no expenses state
 }) => {
   const [activeIndex, setActiveIndex] = useState(null);
   
@@ -166,7 +170,18 @@ const ExpenseChart = ({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 lg:col-span-1">
-      <h3 className="text-lg font-medium mb-2">{title}</h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-lg font-medium">{title}</h3>
+        {pieData.length > 0 && (
+          <button
+            className="text-indigo-600 hover:bg-indigo-50 p-1.5 rounded-full transition-colors"
+            onClick={() => activeTrip && setShowAddExpenseModal(true)}
+            disabled={!activeTrip}
+          >
+            <Plus size={20} />
+          </button>
+        )}
+      </div>
       
       {/* Summary section */}
       {pieData.length > 0 && renderSummary()}
@@ -212,9 +227,16 @@ const ExpenseChart = ({
         ) : (
           <div className="h-full flex flex-col items-center justify-center">
             <p className="text-gray-500 mb-3">No expense data to display</p>
-            <button className="px-4 py-2 bg-purple-50 text-purple-700 rounded-md text-sm hover:bg-purple-100 transition-colors">
-              Add your first expense
-            </button>
+            {firstTimeNoExpenses && (
+              <button
+                className="px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium text-white hover:bg-indigo-700 transition-colors disabled:bg-indigo-300 disabled:cursor-not-allowed flex items-center shadow-sm"
+                onClick={() => activeTrip && setShowAddExpenseModal(true)}
+                disabled={!activeTrip}
+              >
+                <Plus size={16} className="mr-1" />
+                <span>Add First Expense</span>
+              </button>
+            )}
           </div>
         )}
       </div>
